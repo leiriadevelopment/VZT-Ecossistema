@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VZT Ecossistema | Cloud Native</title>
+    <title>VZT Ecossistema | Full Cloud Integrated</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -27,7 +27,6 @@
             }
         }
     </script>
-
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -49,15 +48,18 @@
         }
         
         .kanban-col { min-width: 320px; }
+        
+        /* Estilos específicos para a tela de Login */
+        body.login-mode { overflow: hidden; background-color: #09090b; }
+        #login-screen { transition: opacity 0.5s ease-out; }
     </style>
 
     <script type="module">
-        // Importar funções do Google
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // SUA CONFIGURAÇÃO (Copiada do seu arquivo txt)
+        // SUA CONFIGURAÇÃO EXATA
         const firebaseConfig = {
             apiKey: "AIzaSyAfbaZl283P9mcdo8Y1_-TQV4rO6jBr1pA",
             authDomain: "vzt-ecossistema.firebaseapp.com",
@@ -68,32 +70,43 @@
             measurementId: "G-VQP7YRJMCM"
         };
 
-        // Inicializar
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // Funções Globais (para funcionar nos botões HTML)
         window.vztAuth = auth;
         window.vztDb = db;
-        window.loginGoogle = () => signInWithPopup(auth, provider);
 
-        // --- LÓGICA DO CHAT ---
+        // --- LOGIN LOGIC ---
+        window.handleLogin = async () => {
+            const btn = document.getElementById('btn-login-google');
+            try {
+                btn.innerHTML = 'Conectando...';
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error(error);
+                btn.innerHTML = 'Erro. Tente novamente.';
+                setTimeout(() => btn.innerHTML = '<svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Entrar com Google', 2000);
+            }
+        }
+
+        window.handleLogout = () => {
+            signOut(auth).then(() => window.location.reload());
+        }
+
+        // --- CHAT LOGIC (Firebase + Memory) ---
         window.loadChatHistory = function() {
             const chatContainer = document.getElementById('chat-messages-area');
             if(!auth.currentUser || !chatContainer) return;
-
-            const q = query(collection(db, "chats", auth.currentUser.uid, "messages"), orderBy("timestamp", "asc"));
             
-            // Ouvir banco de dados em tempo real
+            const q = query(collection(db, "chats", auth.currentUser.uid, "messages"), orderBy("timestamp", "asc"));
             onSnapshot(q, (snapshot) => {
                 chatContainer.innerHTML = ''; 
                 snapshot.forEach((doc) => {
                     const msg = doc.data();
                     appendMessageToUI(msg.text, msg.sender);
                 });
-                // Rola para o final
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
         }
@@ -102,22 +115,16 @@
             const input = document.getElementById('chat-input');
             const text = input.value;
             if(!text || !auth.currentUser) return;
-
-            input.value = ''; // Limpa campo
-
-            // 1. Salva mensagem do usuário
+            input.value = ''; 
+            
             await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
-                text: text,
-                sender: 'user',
-                timestamp: new Date()
+                text: text, sender: 'user', timestamp: new Date()
             });
-
-            // 2. Simulação de Resposta IA (Futura conexão Vertex AI)
+            
+            // Simulação de resposta (O backend real virá depois)
             setTimeout(async () => {
                 await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
-                    text: "Recebi sua mensagem. A integração real com Gemini será o próximo passo!",
-                    sender: 'ai',
-                    timestamp: new Date()
+                    text: "Processando no Google Drive... (Integração Backend)", sender: 'ai', timestamp: new Date()
                 });
             }, 1000);
         }
@@ -125,402 +132,382 @@
         function appendMessageToUI(text, sender) {
             const container = document.getElementById('chat-messages-area');
             if(!container) return;
-            
-            let html = '';
-            if (sender === 'user') {
-                html = `<div class="flex justify-end mb-4"><div class="bg-slate-900 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md shadow-sm">${text}</div></div>`;
-            } else {
-                html = `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
-            }
+            let html = sender === 'user' 
+                ? `<div class="flex justify-end mb-4"><div class="bg-slate-900 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md shadow-sm">${text}</div></div>`
+                : `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
             container.insertAdjacentHTML('beforeend', html);
         }
 
-        // --- MONITORAR LOGIN ---
+        // --- AUTH STATE OBSERVER ---
         onAuthStateChanged(auth, (user) => {
-            const statusDiv = document.getElementById('auth-status');
-            if(!statusDiv) return;
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app-screen');
+            const userAvatar = document.getElementById('user-avatar-area');
 
             if (user) {
-                // Usuário Logado
-                statusDiv.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="text-right hidden sm:block">
-                            <p class="text-xs font-bold text-slate-900">${user.displayName}</p>
-                            <p class="text-[10px] text-emerald-600 font-bold uppercase">Conectado</p>
-                        </div>
-                        <img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm">
-                    </div>`;
+                // LOGADO
+                loginScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+                document.body.classList.remove('login-mode');
+                
+                if(userAvatar) {
+                    userAvatar.innerHTML = `
+                        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900">${user.displayName}</p>
+                                <p class="text-[10px] text-emerald-600 font-bold uppercase">Online</p>
+                            </div>
+                            <img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm">
+                        </div>`;
+                }
                 window.loadChatHistory();
             } else {
-                // Usuário Deslogado
-                statusDiv.innerHTML = `
-                    <button onclick="loginGoogle()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition shadow-lg">
-                        <i data-lucide="log-in" class="w-3 h-3"></i> Entrar com Google
-                    </button>`;
+                // DESLOGADO
+                loginScreen.classList.remove('hidden');
+                appScreen.classList.add('hidden');
+                document.body.classList.add('login-mode');
             }
         });
     </script>
 </head>
-<body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden">
+<body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden login-mode">
 
-    <aside class="w-72 bg-vzt-black text-slate-400 flex flex-col z-30 flex-shrink-0 shadow-2xl">
-        <div class="h-16 flex items-center px-6 border-b border-zinc-800">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-white text-black flex items-center justify-center font-bold text-lg rounded-lg shadow-lg">V</div>
-                <div>
-                    <h1 class="text-white font-bold tracking-tight text-lg">VZT</h1>
-                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ECOSSISTEMA CLOUD</span>
-                </div>
-            </div>
+    <div id="login-screen" class="fixed inset-0 z-50 bg-[#09090b] flex items-center justify-center fade-in">
+        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500"></div>
+            <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-3xl font-bold text-black mx-auto mb-6 shadow-lg">V</div>
+            <h1 class="text-2xl font-bold text-white mb-2">VZT Ecossistema</h1>
+            <p class="text-zinc-400 text-sm mb-8">Gestão Clínica Integrada ao Google Workspace.</p>
+            <button id="btn-login-google" onclick="handleLogin()" class="w-full bg-white text-black font-bold py-3.5 px-4 rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2 mb-4">
+                <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Entrar com Google
+            </button>
+            <p class="text-[10px] text-zinc-600 uppercase tracking-widest mt-6">Secure Access</p>
         </div>
+    </div>
 
-        <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-            
-            <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia & Growth</div>
-            <button onclick="navTo('control-tower', this)" class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="text-sm font-medium">Control Tower</span>
-            </button>
-            <button onclick="navTo('crm', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="filter" class="w-4 h-4"></i><span class="text-sm font-medium">CRM & Funil</span>
-            </button>
-            <button onclick="navTo('marketing', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
-                <i data-lucide="bar-chart-2" class="w-4 h-4 text-orange-400 group-hover:text-white"></i><span class="text-sm font-medium">Marketing & Tráfego</span>
-            </button>
-            <button onclick="navTo('finance', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="dollar-sign" class="w-4 h-4"></i><span class="text-sm font-medium">Financeiro</span>
-            </button>
-
-            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação & Equipe</div>
-            <button onclick="navTo('tasks', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
-                <i data-lucide="trello" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i><span class="text-sm font-medium">Gestão de Tarefas</span>
-            </button>
-            <button onclick="navTo('patients', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="users" class="w-4 h-4"></i><span class="text-sm font-medium">Pacientes 360º</span>
-            </button>
-            <button onclick="navTo('agenda', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="calendar" class="w-4 h-4"></i><span class="text-sm font-medium">Agenda Médica</span>
-            </button>
-            <button onclick="navTo('whatsapp', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="message-circle" class="w-4 h-4"></i><span class="text-sm font-medium">WhatsApp Hub</span>
-            </button>
-
-            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">VZT Intelligence</div>
-            <button onclick="navTo('ai-chat', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
-                <i data-lucide="bot" class="w-4 h-4 text-purple-400 group-hover:text-white"></i><span class="text-sm font-medium">VZT AI Chat</span>
-            </button>
-            <button onclick="navTo('ai-voice', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="mic" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">AI Voice Recorder</span>
-            </button>
-            <button onclick="navTo('sops', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="file-text" class="w-4 h-4"></i><span class="text-sm font-medium">Processos (SOPs)</span>
-            </button>
-
-            <div class="mt-auto pt-6 border-t border-zinc-800 mx-3 pb-4 space-y-1">
-                <button onclick="navTo('plugins', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                    <i data-lucide="plug" class="w-4 h-4"></i><span class="text-sm font-medium">Plugins Store</span>
-                </button>
-                <button onclick="navTo('settings', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                    <i data-lucide="settings" class="w-4 h-4"></i><span class="text-sm font-medium">Configurações</span>
-                </button>
-            </div>
-        </nav>
-    </aside>
-
-    <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-50">
+    <div id="app-screen" class="hidden flex h-full w-full">
         
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-20 shadow-sm">
-            <div class="flex items-center gap-4">
-                <h2 id="page-title" class="text-lg font-bold text-slate-800">Control Tower</h2>
-                <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-200 transition">
-                    <i data-lucide="building-2" class="w-4 h-4 text-slate-500"></i>
-                    <span class="text-xs font-semibold text-slate-600">Clínica Dr. Mateus (Matriz)</span>
-                    <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="hidden md:flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Ecossistema Online
-                </div>
-                
-                <div id="auth-status" class="flex items-center gap-4">
-                    <span class="text-xs text-slate-400">Carregando...</span>
-                </div>
-            </div>
-        </header>
-
-        <div id="content-area" class="flex-1 overflow-y-auto p-0 scroll-smooth relative">
-
-            <div id="view-control-tower" class="view-section space-y-8 p-8 fade-in">
-                <div class="flex justify-between items-end">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Visão Operacional</h1><p class="text-slate-500">Resumo executivo do dia.</p></div>
-                    <div class="flex gap-3">
-                        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm flex items-center gap-2"><i data-lucide="file-bar-chart" class="w-4 h-4"></i> Relatório</button>
-                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Ação</button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
-                        <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Pacientes Hoje</span><i data-lucide="users" class="w-4 h-4 text-blue-500"></i></div>
-                        <h3 class="text-2xl font-bold text-slate-900">12</h3>
-                        <p class="text-xs text-slate-400 mt-auto">8 Confirmados / 4 Pendentes</p>
-                    </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
-                        <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Cirurgias</span><i data-lucide="activity" class="w-4 h-4 text-purple-500"></i></div>
-                        <h3 class="text-2xl font-bold text-slate-900">2</h3>
-                        <p class="text-xs text-slate-400 mt-auto">Lipo HD (Manhã)</p>
-                    </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
-                        <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">WhatsApp</span><i data-lucide="message-circle" class="w-4 h-4 text-green-500"></i></div>
-                        <h3 class="text-2xl font-bold text-slate-900">5</h3>
-                        <p class="text-xs text-amber-500 font-bold">Aguardando Resposta</p>
-                    </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
-                        <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Faturamento Dia</span><i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-500"></i></div>
-                        <h3 class="text-2xl font-bold text-slate-900">R$ 24.500</h3>
-                        <p class="text-xs text-emerald-600 font-bold mt-auto">Meta Batida</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i> Agenda (Next)</h3></div>
-                        <div class="p-0 overflow-y-auto flex-1 divide-y divide-slate-50">
-                            <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div><h4 class="font-bold text-slate-900">Ana Silva</h4><p class="text-xs text-slate-500">Retorno Pós-Op</p></div>
-                            <div class="p-4 hover:bg-slate-50"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div><h4 class="font-bold text-slate-800">Carlos Souza</h4><p class="text-xs text-slate-500">Avaliação</p></div>
-                        </div>
-                    </div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4 text-slate-600"></i> Tasks (Hoje)</h3><button class="text-xs font-bold text-slate-400 hover:text-slate-600">+ Add</button></div>
-                        <div class="p-4 space-y-3 overflow-y-auto flex-1">
-                            <div class="flex items-start gap-3 p-3 bg-white border border-red-100 rounded-lg shadow-sm group"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-semibold text-slate-800">Confirmar cirurgias</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Recepção</span><span class="text-[10px] text-red-500 font-bold">Alta</span></div></div></div>
-                            <div class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-lg shadow-sm"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-medium text-slate-700">Emitir NFs</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Financeiro</span></div></div></div>
-                        </div>
-                    </div>
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4 text-slate-600"></i> Plugins</h3></div>
-                        <div class="p-4 space-y-4 flex-1 overflow-y-auto">
-                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">HubSpot CRM</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
-                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">Google Calendar</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
-                        </div>
+        <aside class="w-72 bg-vzt-black text-slate-400 flex flex-col z-30 flex-shrink-0 shadow-2xl">
+            <div class="h-16 flex items-center px-6 border-b border-zinc-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white text-black flex items-center justify-center font-bold text-lg rounded-lg shadow-lg">V</div>
+                    <div>
+                        <h1 class="text-white font-bold tracking-tight text-lg">VZT</h1>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ECOSSISTEMA</span>
                     </div>
                 </div>
             </div>
 
-            <div id="view-tasks" class="view-section hidden h-full flex flex-col p-8 fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Gestão da Equipe</h1><p class="text-slate-500">Quadro de tarefas e demandas internas.</p></div>
-                    <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Tarefa</button>
-                </div>
-                
-                <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">A Fazer (Backlog)</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div>
-                        <div class="space-y-2 overflow-y-auto flex-1">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mb-2 inline-block">Urgente</span>
-                                <p class="text-sm font-bold text-slate-800">Comprar Fios de Sutura</p>
-                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">Enf</div><span class="text-xs text-slate-400">10 Nov</span></div>
-                            </div>
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                <p class="text-sm font-bold text-slate-800">Treinar nova secretária</p>
-                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Adm</div><span class="text-xs text-slate-400">15 Nov</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Em Andamento</h3><span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">2</span></div>
-                        <div class="space-y-2 overflow-y-auto flex-1">
-                            <div class="bg-white p-3 rounded-lg border border-l-4 border-l-blue-500 border-slate-200 shadow-sm cursor-pointer">
-                                <p class="text-sm font-bold text-slate-800">Cotação Equipamentos Laser</p>
-                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-blue-600 font-bold">Em progresso</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Revisão</h3><span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">1</span></div>
-                        <div class="space-y-2 overflow-y-auto flex-1">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer">
-                                <p class="text-sm font-bold text-slate-800">Aprovar posts Instagram</p>
-                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-amber-600">Aguardando aprovação</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Concluído</h3><span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div>
-                        <div class="space-y-2 overflow-y-auto flex-1 opacity-60">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                <p class="text-sm font-bold text-slate-500 line-through">Pagamento Aluguel</p>
-                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Fin</div><span class="text-xs text-emerald-600">Feito</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+                <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia & Growth</div>
+                <button onclick="navTo('control-tower', this)" class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="text-sm font-medium">Control Tower</span>
+                </button>
+                <button onclick="navTo('crm', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="filter" class="w-4 h-4"></i><span class="text-sm font-medium">CRM & Funil</span>
+                </button>
+                <button onclick="navTo('marketing', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-orange-400 group-hover:text-white"></i><span class="text-sm font-medium">Marketing & Tráfego</span>
+                </button>
+                <button onclick="navTo('finance', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="dollar-sign" class="w-4 h-4"></i><span class="text-sm font-medium">Financeiro</span>
+                </button>
 
-            <div id="view-marketing" class="view-section hidden space-y-8 p-8 fade-in">
-                <div class="flex justify-between items-end">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Performance de Marketing</h1><p class="text-slate-500">Análise de Tráfego Pago e Orgânico.</p></div>
-                    <div class="flex items-center gap-3">
-                        <select class="bg-white border border-slate-200 text-sm rounded-lg px-3 py-2"><option>Últimos 30 Dias</option></select>
-                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar Dados</button>
-                    </div>
-                </div>
+                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação & Equipe</div>
+                <button onclick="navTo('tasks', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                    <i data-lucide="trello" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i><span class="text-sm font-medium">Gestão de Tarefas</span>
+                </button>
+                <button onclick="navTo('patients', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="users" class="w-4 h-4"></i><span class="text-sm font-medium">Pacientes 360º</span>
+                </button>
+                <button onclick="navTo('agenda', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="calendar" class="w-4 h-4"></i><span class="text-sm font-medium">Agenda Médica</span>
+                </button>
+                <button onclick="navTo('whatsapp', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i><span class="text-sm font-medium">WhatsApp Hub</span>
+                </button>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Investimento (Ads)</p>
-                        <h3 class="text-2xl font-bold text-slate-900">R$ 4.500</h3>
-                        <p class="text-xs text-slate-400 mt-1">Meta/Google</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Leads Gerados</p>
-                        <h3 class="text-2xl font-bold text-slate-900">142</h3>
-                        <p class="text-xs text-emerald-600 mt-1 font-bold">CPL: R$ 31,69</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Vendas (Origem MKT)</p>
-                        <h3 class="text-2xl font-bold text-slate-900">R$ 68.000</h3>
-                        <p class="text-xs text-slate-400 mt-1">12 Pacientes</p>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                        <p class="text-xs font-bold text-slate-500 uppercase">ROAS (Retorno)</p>
-                        <h3 class="text-2xl font-bold text-emerald-600">15.1x</h3>
-                        <p class="text-xs text-slate-400 mt-1">Excelente</p>
-                    </div>
-                </div>
+                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">VZT Intelligence</div>
+                <button onclick="navTo('ai-chat', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                    <i data-lucide="bot" class="w-4 h-4 text-purple-400 group-hover:text-white"></i><span class="text-sm font-medium">VZT AI Chat</span>
+                </button>
+                <button onclick="navTo('ai-voice', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="mic" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">AI Voice Recorder</span>
+                </button>
+                <button onclick="navTo('sops', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="file-text" class="w-4 h-4"></i><span class="text-sm font-medium">Processos (SOPs)</span>
+                </button>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="bar-chart" class="w-4 h-4 text-orange-500"></i> Evolução de Leads x Custo</h3>
-                        <div class="h-64 flex items-end justify-between gap-2 px-2 border-b border-slate-100 pb-2">
-                            <div class="w-full bg-orange-100 rounded-t h-[40%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[60%] rounded-t opacity-80"></div></div>
-                            <div class="w-full bg-orange-100 rounded-t h-[55%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[50%] rounded-t opacity-80"></div></div>
-                            <div class="w-full bg-orange-100 rounded-t h-[70%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[75%] rounded-t opacity-80"></div></div>
-                            <div class="w-full bg-orange-100 rounded-t h-[60%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[65%] rounded-t opacity-80"></div></div>
-                            <div class="w-full bg-orange-100 rounded-t h-[85%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[80%] rounded-t opacity-80"></div></div>
-                        </div>
-                        <div class="flex justify-center gap-6 mt-4 text-xs">
-                            <span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> Leads</span>
-                            <span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-100 rounded-full"></div> Investimento</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white border border-slate-200 rounded-xl flex flex-col shadow-sm">
-                        <div class="p-5 border-b border-slate-100"><h3 class="font-bold text-slate-800">Top Campanhas</h3></div>
-                        <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded bg-gradient-to-tr from-yellow-400 to-purple-600 flex items-center justify-center text-white"><i data-lucide="instagram" class="w-4 h-4"></i></div>
-                                    <div><p class="text-sm font-bold text-slate-800">Lipo HD - Vídeo</p><p class="text-[10px] text-slate-500">Instagram Feed</p></div>
-                                </div>
-                                <div class="text-right"><p class="text-xs font-bold text-slate-800">45 Leads</p><p class="text-[10px] text-emerald-600">R$ 12,50/lead</p></div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded bg-blue-500 flex items-center justify-center text-white"><i data-lucide="search" class="w-4 h-4"></i></div>
-                                    <div><p class="text-sm font-bold text-slate-800">Rinoplastia - Search</p><p class="text-[10px] text-slate-500">Google Ads</p></div>
-                                </div>
-                                <div class="text-right"><p class="text-xs font-bold text-slate-800">28 Leads</p><p class="text-[10px] text-emerald-600">R$ 45,00/lead</p></div>
-                            </div>
-                            <div class="flex items-center justify-between opacity-60">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded bg-blue-700 flex items-center justify-center text-white"><i data-lucide="facebook" class="w-4 h-4"></i></div>
-                                    <div><p class="text-sm font-bold text-slate-800">Botox Promo</p><p class="text-[10px] text-slate-500">Facebook</p></div>
-                                </div>
-                                <div class="text-right"><p class="text-xs font-bold text-slate-800">10 Leads</p><p class="text-[10px] text-red-500">R$ 80,00/lead</p></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-crm" class="view-section hidden h-full flex flex-col p-8 fade-in">
-                <div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold text-slate-900">Pipeline Comercial</h1></div><div class="flex gap-3"><input type="text" placeholder="Buscar Lead..." class="bg-white border rounded-lg px-3 py-2 text-sm w-64"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Lead</button></div></div>
-                <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Mariana Costa</span><span class="text-xs text-slate-400">2h</span></div><p class="text-xs text-slate-500">Rinoplastia</p></div></div></div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Carla Dias</span><span class="text-xs text-slate-400">1d</span></div><p class="text-xs text-slate-500">Lipo HD</p></div></div></div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-l-4 border-l-amber-400 border-slate-200 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Luiza M.</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div><p class="text-xs text-slate-500">Orçamento Enviado</p></div></div></div>
-                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Fechado / Ganho</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">42</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-emerald-900 text-sm">Ana Silva</span><span class="text-xs text-emerald-600">Pago</span></div><p class="text-xs text-emerald-700">Botox Day</p></div></div></div>
-                </div>
-            </div>
-
-            <div id="view-finance" class="view-section hidden space-y-6 p-8 fade-in">
-                <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Gestão Financeira</h1><p class="text-slate-500">DRE e Fluxo de Caixa.</p></div></div>
-                <div class="grid grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Receita Bruta</p><h3 class="text-2xl font-bold text-slate-900">R$ 185.400</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Despesas</p><h3 class="text-2xl font-bold text-red-600">R$ 92.100</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm bg-emerald-50/50 border-emerald-100"><p class="text-xs font-bold text-emerald-600 uppercase">Lucro Líquido</p><h3 class="text-2xl font-bold text-emerald-700">R$ 93.300</h3></div></div>
-            </div>
-
-            <div id="view-patients" class="view-section hidden p-8 fade-in h-full flex flex-col relative">
-                <div id="patients-list-container" class="flex-1 flex flex-col space-y-6">
-                    <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Base de Pacientes</h1><p class="text-slate-500">Prontuário Unificado.</p></div><div class="flex items-center gap-3 bg-white border border-slate-200 px-3 py-2 rounded-lg w-80 shadow-sm"><i data-lucide="search" class="w-4 h-4 text-slate-400"></i><input type="text" placeholder="Buscar..." class="bg-transparent text-sm w-full outline-none"></div></div>
-                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200"><tr><th class="px-6 py-4">Paciente</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4">Última Interação</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody class="divide-y divide-slate-100" id="patients-table-body"></tbody></table></div>
-                </div>
-                <div id="patient-detail-view" class="hidden absolute inset-0 bg-slate-50 p-8 z-20 overflow-y-auto">
-                    <button onclick="closePatientProfile()" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar</button>
-                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex justify-between items-start"><div class="flex gap-6"><div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-3xl font-bold text-slate-400 border-4 border-white shadow-md" id="p-avatar">AS</div><div><h1 class="text-3xl font-bold text-slate-900" id="p-name">Ana Silva</h1><div class="flex gap-2 mt-2"><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase" id="p-status">Pós-Op</span></div></div></div><div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase tracking-wider">LTV</p><h2 class="text-3xl font-bold text-emerald-600" id="p-ltv">R$ 0</h2></div></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div><div class="space-y-6"><div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-4"><i data-lucide="check-square" class="w-5 h-5 text-slate-600 inline mr-2"></i> Tasks</h3><div class="space-y-3" id="p-tasks"></div></div></div></div>
-                </div>
-            </div>
-
-            <div id="view-agenda" class="view-section hidden space-y-6 p-8 fade-in">
-                <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Agenda Médica</h1></div><div class="flex gap-2"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync</button></div></div>
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm min-h-[600px]"><div class="grid grid-cols-1 divide-y divide-slate-100"><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">09:00</span><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Ana Silva - Retorno</span><span class="text-slate-500 text-xs">Sala 1</span></div></div><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">10:00</span><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Carlos Souza - Lipo HD</span><span class="text-slate-500 text-xs">Centro Cirúrgico</span></div></div></div></div>
-            </div>
-
-            <div id="view-whatsapp" class="view-section hidden h-full flex fade-in bg-white">
-                <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div><div class="flex-1 overflow-y-auto"><div class="p-4 border-b border-slate-100 bg-white border-l-4 border-l-blue-500 cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Ana P.</span><span class="text-xs text-slate-400">14:30</span></div><p class="text-xs text-slate-500 truncate">Doutor, meu rosto está inchado...</p></div></div></div>
-                <div class="flex-1 flex flex-col bg-white"><div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800">Ana P.</h3></div><div class="flex-1 p-6 bg-white space-y-4 overflow-y-auto"><div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div><div class="flex justify-start"><div class="bg-slate-100 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div></div><div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-3"><input type="text" placeholder="Digite..." class="flex-1 border rounded-lg px-4 py-2 text-sm"><button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button></div></div>
-            </div>
-
-            <div id="view-ai-chat" class="view-section hidden h-full flex flex-col relative bg-slate-50 p-6 fade-in">
-                <div class="flex items-center justify-between mb-4">
-                    <div><h1 class="text-2xl font-bold text-slate-900">VZT AI</h1><p class="text-slate-500">Assistente Inteligente.</p></div>
-                    <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded border border-purple-200 flex items-center gap-1">
-                        <i data-lucide="sparkles" class="w-3 h-3"></i> Gemini Powered
-                    </div>
-                </div>
-
-                <div id="chat-messages-area" class="flex-1 overflow-y-auto mb-4 p-6 border border-slate-200 rounded-xl bg-white shadow-sm space-y-4">
-                    <div class="flex flex-col items-center justify-center h-full text-slate-400 opacity-50">
-                        <i data-lucide="message-square" class="w-12 h-12 mb-2"></i>
-                        <p class="text-sm">O histórico aparecerá aqui após o login.</p>
-                    </div>
-                </div>
-
-                <div class="flex gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-                    <input id="chat-input" type="text" 
-                        class="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-700" 
-                        placeholder="Pergunte sobre a agenda ou financeiro..."
-                        onkeypress="if(event.key === 'Enter') sendToCloud()">
-                    
-                    <button onclick="sendToCloud()" class="bg-slate-900 text-white px-6 rounded-lg font-bold hover:bg-slate-800 transition flex items-center gap-2">
-                        <span>Enviar</span> <i data-lucide="send" class="w-4 h-4"></i>
+                <div class="mt-auto pt-6 border-t border-zinc-800 mx-3 pb-4 space-y-1">
+                    <button onclick="navTo('plugins', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                        <i data-lucide="plug" class="w-4 h-4"></i><span class="text-sm font-medium">Plugins Store</span>
+                    </button>
+                    <button onclick="navTo('settings', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                        <i data-lucide="settings" class="w-4 h-4"></i><span class="text-sm font-medium">Configurações</span>
                     </button>
                 </div>
-            </div>
+            </nav>
+        </aside>
 
-            <div id="view-ai-voice" class="view-section hidden max-w-4xl mx-auto space-y-8 p-8 fade-in">
-                <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div><div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div><div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2"><i data-lucide="play" class="w-5 h-5"></i> Iniciar</button></div></div>
-            </div>
+        <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-50">
+            
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-20 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <h2 id="page-title" class="text-lg font-bold text-slate-800">Control Tower</h2>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-200 transition">
+                        <i data-lucide="building-2" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-xs font-semibold text-slate-600">Clínica Dr. Mateus (Matriz)</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Ecossistema Online
+                    </div>
+                    <div id="user-avatar-area" class="flex items-center gap-4">
+                        <span class="text-xs text-slate-400">Carregando...</span>
+                    </div>
+                </div>
+            </header>
 
-            <div id="view-sops" class="view-section hidden space-y-8 p-8 fade-in">
-                <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Protocolos (SOPs)</h1></div><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Doc</button></div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Onboarding de Leads</h4><p class="text-xs text-slate-500 mt-1">Scripts de vendas.</p></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Checklist Cirúrgico</h4><p class="text-xs text-slate-500 mt-1">Sala e materiais.</p></div></div>
-            </div>
+            <div id="content-area" class="flex-1 overflow-y-auto p-0 scroll-smooth relative">
 
-            <div id="view-plugins" class="view-section hidden p-8 space-y-8 fade-in bg-slate-50 h-full overflow-y-auto">
-                <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Plugins Store</h1></div></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden group"><div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Instalado</div><div class="flex items-start gap-4 mb-4"><div class="w-12 h-12 bg-[#ff7a59] rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-sm">HS</div><div><h3 class="font-bold text-slate-900">HubSpot CRM</h3></div></div><button class="w-full py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Configurar</button></div></div>
-            </div>
+                <div id="view-control-tower" class="view-section space-y-8 p-8 fade-in">
+                    <div class="flex justify-between items-end">
+                        <div><h1 class="text-2xl font-bold text-slate-900">Visão Operacional</h1><p class="text-slate-500">Resumo executivo do dia.</p></div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 shadow-sm flex items-center gap-2"><i data-lucide="file-bar-chart" class="w-4 h-4"></i> Relatório</button>
+                            <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Ação</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
+                            <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Pacientes Hoje</span><i data-lucide="users" class="w-4 h-4 text-blue-500"></i></div>
+                            <h3 class="text-2xl font-bold text-slate-900">12</h3>
+                            <p class="text-xs text-slate-400 mt-auto">8 Confirmados / 4 Pendentes</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
+                            <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Cirurgias</span><i data-lucide="activity" class="w-4 h-4 text-purple-500"></i></div>
+                            <h3 class="text-2xl font-bold text-slate-900">2</h3>
+                            <p class="text-xs text-slate-400 mt-auto">Lipo HD (Manhã)</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
+                            <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">WhatsApp</span><i data-lucide="message-circle" class="w-4 h-4 text-green-500"></i></div>
+                            <h3 class="text-2xl font-bold text-slate-900">5</h3>
+                            <p class="text-xs text-amber-500 font-bold">Aguardando Resposta</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
+                            <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Faturamento Dia</span><i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-500"></i></div>
+                            <h3 class="text-2xl font-bold text-slate-900">R$ 24.500</h3>
+                            <p class="text-xs text-emerald-600 font-bold mt-auto">Meta Batida</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+                        <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
+                            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i> Agenda (Next)</h3></div>
+                            <div class="p-0 overflow-y-auto flex-1 divide-y divide-slate-50">
+                                <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div><h4 class="font-bold text-slate-900">Ana Silva</h4><p class="text-xs text-slate-500">Retorno Pós-Op</p></div>
+                                <div class="p-4 hover:bg-slate-50"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div><h4 class="font-bold text-slate-800">Carlos Souza</h4><p class="text-xs text-slate-500">Avaliação</p></div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
+                            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4 text-slate-600"></i> Tasks (Hoje)</h3><button class="text-xs font-bold text-slate-400 hover:text-slate-600">+ Add</button></div>
+                            <div class="p-4 space-y-3 overflow-y-auto flex-1">
+                                <div class="flex items-start gap-3 p-3 bg-white border border-red-100 rounded-lg shadow-sm group"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-semibold text-slate-800">Confirmar cirurgias</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Recepção</span><span class="text-[10px] text-red-500 font-bold">Alta</span></div></div></div>
+                                <div class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-lg shadow-sm"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-medium text-slate-700">Emitir NFs</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Financeiro</span></div></div></div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
+                            <div class="p-5 border-b border-slate-100 bg-slate-50/50"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4 text-slate-600"></i> Plugins</h3></div>
+                            <div class="p-4 space-y-4 flex-1 overflow-y-auto">
+                                <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">HubSpot CRM</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
+                                <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">Google Calendar</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div id="view-settings" class="view-section hidden p-8 max-w-5xl mx-auto space-y-8 fade-in">
-                <div><h1 class="text-2xl font-bold text-slate-900">Configurações Globais</h1></div>
-                <div class="border-b border-slate-200 flex gap-6"><button class="pb-3 border-b-2 border-slate-900 font-bold text-slate-900 text-sm">Organização</button><button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700">Usuários</button></div>
-                <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4"><h3 class="font-bold text-slate-800">Detalhes da Clínica</h3><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome</label><input type="text" value="Clínica Dr. Mateus" class="w-full border rounded px-3 py-2 text-sm"></div></div></div>
-            </div>
+                <div id="view-tasks" class="view-section hidden h-full flex flex-col p-8 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <div><h1 class="text-2xl font-bold text-slate-900">Gestão da Equipe</h1><p class="text-slate-500">Quadro de tarefas e demandas internas.</p></div>
+                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Tarefa</button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">A Fazer (Backlog)</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div>
+                            <div class="space-y-2 overflow-y-auto flex-1">
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
+                                    <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mb-2 inline-block">Urgente</span>
+                                    <p class="text-sm font-bold text-slate-800">Comprar Fios de Sutura</p>
+                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">Enf</div><span class="text-xs text-slate-400">10 Nov</span></div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
+                                    <p class="text-sm font-bold text-slate-800">Treinar nova secretária</p>
+                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Adm</div><span class="text-xs text-slate-400">15 Nov</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Em Andamento</h3><span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">2</span></div>
+                            <div class="space-y-2 overflow-y-auto flex-1">
+                                <div class="bg-white p-3 rounded-lg border border-l-4 border-l-blue-500 border-slate-200 shadow-sm cursor-pointer">
+                                    <p class="text-sm font-bold text-slate-800">Cotação Equipamentos Laser</p>
+                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-blue-600 font-bold">Em progresso</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Revisão</h3><span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">1</span></div>
+                            <div class="space-y-2 overflow-y-auto flex-1">
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer">
+                                    <p class="text-sm font-bold text-slate-800">Aprovar posts Instagram</p>
+                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-amber-600">Aguardando aprovação</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Concluído</h3><span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div>
+                            <div class="space-y-2 overflow-y-auto flex-1 opacity-60">
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                    <p class="text-sm font-bold text-slate-500 line-through">Pagamento Aluguel</p>
+                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Fin</div><span class="text-xs text-emerald-600">Feito</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        </div>
-    </main>
+                <div id="view-marketing" class="view-section hidden space-y-8 p-8 fade-in">
+                    <div class="flex justify-between items-end">
+                        <div><h1 class="text-2xl font-bold text-slate-900">Performance de Marketing</h1><p class="text-slate-500">Análise de Tráfego Pago e Orgânico.</p></div>
+                        <div class="flex items-center gap-3">
+                            <select class="bg-white border border-slate-200 text-sm rounded-lg px-3 py-2"><option>Últimos 30 Dias</option></select>
+                            <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar Dados</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Investimento (Ads)</p><h3 class="text-2xl font-bold text-slate-900">R$ 4.500</h3><p class="text-xs text-slate-400 mt-1">Meta/Google</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Leads Gerados</p><h3 class="text-2xl font-bold text-slate-900">142</h3><p class="text-xs text-emerald-600 mt-1 font-bold">CPL: R$ 31,69</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Vendas (Origem MKT)</p><h3 class="text-2xl font-bold text-slate-900">R$ 68.000</h3><p class="text-xs text-slate-400 mt-1">12 Pacientes</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                            <p class="text-xs font-bold text-slate-500 uppercase">ROAS (Retorno)</p><h3 class="text-2xl font-bold text-emerald-600">15.1x</h3><p class="text-xs text-slate-400 mt-1">Excelente</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="bar-chart" class="w-4 h-4 text-orange-500"></i> Evolução de Leads x Custo</h3>
+                            <div class="h-64 flex items-end justify-between gap-2 px-2 border-b border-slate-100 pb-2">
+                                <div class="w-full bg-orange-100 rounded-t h-[40%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[60%] rounded-t opacity-80"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t h-[55%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[50%] rounded-t opacity-80"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t h-[70%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[75%] rounded-t opacity-80"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t h-[60%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[65%] rounded-t opacity-80"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t h-[85%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[80%] rounded-t opacity-80"></div></div>
+                            </div>
+                            <div class="flex justify-center gap-6 mt-4 text-xs"><span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> Leads</span><span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-100 rounded-full"></div> Investimento</span></div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl flex flex-col shadow-sm">
+                            <div class="p-5 border-b border-slate-100"><h3 class="font-bold text-slate-800">Top Campanhas</h3></div>
+                            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded bg-gradient-to-tr from-yellow-400 to-purple-600 flex items-center justify-center text-white"><i data-lucide="instagram" class="w-4 h-4"></i></div><div><p class="text-sm font-bold text-slate-800">Lipo HD</p><p class="text-[10px] text-slate-500">Feed</p></div></div><div class="text-right"><p class="text-xs font-bold text-slate-800">45 Leads</p><p class="text-[10px] text-emerald-600">R$ 12,50/lead</p></div></div>
+                                <div class="flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded bg-blue-500 flex items-center justify-center text-white"><i data-lucide="search" class="w-4 h-4"></i></div><div><p class="text-sm font-bold text-slate-800">Rino</p><p class="text-[10px] text-slate-500">Google</p></div></div><div class="text-right"><p class="text-xs font-bold text-slate-800">28 Leads</p><p class="text-[10px] text-emerald-600">R$ 45,00/lead</p></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-crm" class="view-section hidden h-full flex flex-col p-8 fade-in">
+                    <div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold text-slate-900">Pipeline Comercial</h1></div><div class="flex gap-3"><input type="text" placeholder="Buscar Lead..." class="bg-white border rounded-lg px-3 py-2 text-sm w-64"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Lead</button></div></div>
+                    <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Mariana Costa</span><span class="text-xs text-slate-400">2h</span></div><p class="text-xs text-slate-500">Rinoplastia</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Carla Dias</span><span class="text-xs text-slate-400">1d</span></div><p class="text-xs text-slate-500">Lipo HD</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-l-4 border-l-amber-400 border-slate-200 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Luiza M.</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div><p class="text-xs text-slate-500">Orçamento Enviado</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Fechado / Ganho</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">42</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-emerald-900 text-sm">Ana Silva</span><span class="text-xs text-emerald-600">Pago</span></div><p class="text-xs text-emerald-700">Botox Day</p></div></div></div>
+                    </div>
+                </div>
+
+                <div id="view-finance" class="view-section hidden space-y-6 p-8 fade-in">
+                    <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Gestão Financeira</h1><p class="text-slate-500">DRE e Fluxo de Caixa.</p></div></div>
+                    <div class="grid grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Receita Bruta</p><h3 class="text-2xl font-bold text-slate-900">R$ 185.400</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Despesas</p><h3 class="text-2xl font-bold text-red-600">R$ 92.100</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm bg-emerald-50/50 border-emerald-100"><p class="text-xs font-bold text-emerald-600 uppercase">Lucro Líquido</p><h3 class="text-2xl font-bold text-emerald-700">R$ 93.300</h3></div></div>
+                </div>
+
+                <div id="view-patients" class="view-section hidden p-8 fade-in h-full flex flex-col relative">
+                    <div id="patients-list-container" class="flex-1 flex flex-col space-y-6">
+                        <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Base de Pacientes</h1><p class="text-slate-500">Prontuário Unificado.</p></div><div class="flex items-center gap-3 bg-white border border-slate-200 px-3 py-2 rounded-lg w-80 shadow-sm"><i data-lucide="search" class="w-4 h-4 text-slate-400"></i><input type="text" placeholder="Buscar..." class="bg-transparent text-sm w-full outline-none"></div></div>
+                        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200"><tr><th class="px-6 py-4">Paciente</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4">Última Interação</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody class="divide-y divide-slate-100" id="patients-table-body"></tbody></table></div>
+                    </div>
+                    <div id="patient-detail-view" class="hidden absolute inset-0 bg-slate-50 p-8 z-20 overflow-y-auto">
+                        <button onclick="closePatientProfile()" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar</button>
+                        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex justify-between items-start">
+                            <div class="flex gap-6"><div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-3xl font-bold text-slate-400 border-4 border-white shadow-md" id="p-avatar">AS</div><div><h1 class="text-3xl font-bold text-slate-900" id="p-name">Ana Silva</h1><div class="flex gap-2 mt-2"><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase" id="p-status">Pós-Op</span></div></div></div>
+                            <div class="flex gap-3">
+                                <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 shadow-sm">
+                                    <i data-lucide="folder" class="w-4 h-4 text-blue-600"></i> Google Drive Sync
+                                </button>
+                                <div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase tracking-wider">LTV</p><h2 class="text-3xl font-bold text-emerald-600" id="p-ltv">R$ 0</h2></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div><div class="space-y-6"><div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-4"><i data-lucide="check-square" class="w-5 h-5 text-slate-600 inline mr-2"></i> Tasks</h3><div class="space-y-3" id="p-tasks"></div></div></div></div>
+                    </div>
+                </div>
+
+                <div id="view-agenda" class="view-section hidden space-y-6 p-8 fade-in">
+                    <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Agenda Médica</h1></div><div class="flex gap-2"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync</button></div></div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm min-h-[600px]"><div class="grid grid-cols-1 divide-y divide-slate-100"><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">09:00</span><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Ana Silva - Retorno</span><span class="text-slate-500 text-xs">Sala 1</span></div></div><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">10:00</span><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Carlos Souza - Lipo HD</span><span class="text-slate-500 text-xs">Centro Cirúrgico</span></div></div></div></div>
+                </div>
+
+                <div id="view-whatsapp" class="view-section hidden h-full flex fade-in bg-white">
+                    <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div><div class="flex-1 overflow-y-auto"><div class="p-4 border-b border-slate-100 bg-white border-l-4 border-l-blue-500 cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Ana P.</span><span class="text-xs text-slate-400">14:30</span></div><p class="text-xs text-slate-500 truncate">Doutor, meu rosto está inchado...</p></div></div></div>
+                    <div class="flex-1 flex flex-col bg-white"><div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800">Ana P.</h3></div><div class="flex-1 p-6 bg-white space-y-4 overflow-y-auto"><div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div><div class="flex justify-start"><div class="bg-slate-100 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div></div><div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-3"><input type="text" placeholder="Digite..." class="flex-1 border rounded-lg px-4 py-2 text-sm"><button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button></div></div>
+                </div>
+
+                <div id="view-ai-chat" class="view-section hidden h-full flex flex-col relative bg-slate-50 p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div><h1 class="text-2xl font-bold text-slate-900">VZT AI</h1><p class="text-slate-500">Assistente Inteligente.</p></div>
+                        <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded border border-purple-200 flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Gemini Powered</div>
+                    </div>
+                    <div id="chat-messages-area" class="flex-1 overflow-y-auto mb-4 p-6 border border-slate-200 rounded-xl bg-white shadow-sm space-y-4">
+                        <div class="flex flex-col items-center justify-center h-full text-slate-400 opacity-50"><i data-lucide="message-square" class="w-12 h-12 mb-2"></i><p class="text-sm">O histórico aparecerá aqui após o login.</p></div>
+                    </div>
+                    <div class="flex gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                        <input id="chat-input" type="text" class="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-700" placeholder="Pergunte sobre a agenda ou financeiro..." onkeypress="if(event.key === 'Enter') sendToCloud()">
+                        <button onclick="sendToCloud()" class="bg-slate-900 text-white px-6 rounded-lg font-bold hover:bg-slate-800 transition flex items-center gap-2"><span>Enviar</span> <i data-lucide="send" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <div id="view-ai-voice" class="view-section hidden max-w-4xl mx-auto space-y-8 p-8 fade-in">
+                    <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div><div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div><div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2"><i data-lucide="play" class="w-5 h-5"></i> Iniciar</button></div></div>
+                </div>
+
+                <div id="view-sops" class="view-section hidden space-y-8 p-8 fade-in">
+                    <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Protocolos (SOPs)</h1></div><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Doc</button></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Onboarding de Leads</h4><p class="text-xs text-slate-500 mt-1">Scripts de vendas.</p></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Checklist Cirúrgico</h4><p class="text-xs text-slate-500 mt-1">Sala e materiais.</p></div></div>
+                </div>
+
+                <div id="view-plugins" class="view-section hidden p-8 space-y-8 fade-in bg-slate-50 h-full overflow-y-auto">
+                    <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Plugins Store</h1></div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden group"><div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Instalado</div><div class="flex items-start gap-4 mb-4"><div class="w-12 h-12 bg-[#ff7a59] rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-sm">HS</div><div><h3 class="font-bold text-slate-900">HubSpot CRM</h3></div></div><button class="w-full py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Configurar</button></div></div>
+                </div>
+
+                <div id="view-settings" class="view-section hidden p-8 max-w-5xl mx-auto space-y-8 fade-in">
+                    <div><h1 class="text-2xl font-bold text-slate-900">Configurações Globais</h1></div>
+                    <div class="border-b border-slate-200 flex gap-6"><button class="pb-3 border-b-2 border-slate-900 font-bold text-slate-900 text-sm">Organização</button><button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700">Usuários</button></div>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4"><h3 class="font-bold text-slate-800">Detalhes da Clínica</h3><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome</label><input type="text" value="Clínica Dr. Mateus" class="w-full border rounded px-3 py-2 text-sm"></div></div></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
 
     <script>
         lucide.createIcons();
@@ -545,10 +532,9 @@
             if(target) target.classList.remove('hidden');
             else document.getElementById('view-control-tower').classList.remove('hidden');
 
-            // Carregar tabela de pacientes se for a aba certa
             if(viewId === 'patients') renderPatientsTable();
             
-            // Carregar Chat do Firebase se for a aba certa
+            // Se for chat, carrega histórico
             if(viewId === 'ai-chat' && window.loadChatHistory) window.loadChatHistory();
             
             const titles = { 'control-tower': 'Control Tower', 'marketing': 'Marketing & Tráfego', 'tasks': 'Gestão de Tarefas', 'patients': 'Pacientes 360º', 'ai-chat': 'VZT AI Chat', 'sops': 'Protocolos', 'settings': 'Configurações' };
