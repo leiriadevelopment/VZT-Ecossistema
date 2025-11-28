@@ -1,20 +1,27 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { google } = require("googleapis");
-const cors = require("cors")({ origin: true }); // Permite que seu site chame o robô
+const { VertexAI } = require('@google-cloud/vertexai');
+const cors = require("cors")({ origin: true });
 
 admin.initializeApp();
 
-// --- MAPA DO GOOGLE DRIVE (SEUS IDs REAIS) ---
+// ==========================================
+// 🗺️ MAPA DO GOOGLE DRIVE (SEUS IDs REAIS)
+// ==========================================
 const DRIVE_MAP = {
     adm: "1JzZ4Ey-jKConwxrmZDHZMGou_vIm72i7",       // 01. Administrativo
     sops: "1GNxZCeAe2N2h_S1ap6XzoA1J-pgFJlco",      // 02. Processos e POPs
-    patients: "1eVb3UK-d6nfXGiYEcZ2Bnfv1dcXNmnVr",  // 03. Prontuários (Raiz dos Pacientes)
+    patients: "1eVb3UK-d6nfXGiYEcZ2Bnfv1dcXNmnVr",  // 03. Prontuários (Raiz)
     team: "17N9ZeDp5uRE2pZENpH7-cXNWYeqVPzBw",      // 04. Equipe
     marketing: "1FzIZ00xkNkmfnhzS-3u-UwZN6J1TZoeI"  // 05. Marketing
 };
 
-// Autenticação (Identidade Nativa do Google Cloud)
+// CONFIGURAÇÃO GEMINI
+const PROJECT_ID = "vzt-ecossistema";
+const LOCATION = "us-central1";
+
+// --- AUTENTICAÇÃO DRIVE (Identidade Nativa) ---
 async function getDriveClient() {
     const auth = new google.auth.GoogleAuth({
         scopes: ["https://www.googleapis.com/auth/drive"],
@@ -22,102 +29,100 @@ async function getDriveClient() {
     return google.drive({ version: "v3", auth });
 }
 
-/**
- * ROBÔ 1: CRIAR PRONTUÁRIO DE PACIENTE
- * Recebe: { nome, sobrenome, cpf }
- * Faz: Cria pasta "Sobrenome, Nome - CPF" dentro da pasta 03 + Subpastas
- */
+// ---------------------------------------------------------
+// 🤖 ROBÔ 1: ARQUITETO (CRIAR PRONTUÁRIO)
+// ---------------------------------------------------------
 exports.createPatientDrive = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
         try {
             const drive = await getDriveClient();
             const { nome, sobrenome, cpf } = req.body;
 
-            // Validação da Regra de Ouro
-            if (!cpf || !nome || !sobrenome) {
-                return res.status(400).json({ error: "Dados incompletos. CPF, Nome e Sobrenome são obrigatórios." });
-            }
+            if (!cpf) return res.status(400).json({ error: "CPF Obrigatório" });
 
-            // Formatação: "Silva, Ana - 123..."
             const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
             const folderName = `${capitalize(sobrenome)}, ${capitalize(nome)} - ${cpf}`;
 
-            console.log(`[Drive] Criando estrutura para: ${folderName}`);
+            console.log("Criando pasta no Drive:", folderName);
 
-            // 1. Criar Pasta Raiz na Pasta 03 (Pacientes)
+            // Cria pasta raiz DENTRO da pasta de Pacientes (Usando o ID do Mapa)
             const fileMetadata = {
                 name: folderName,
                 mimeType: "application/vnd.google-apps.folder",
                 parents: [DRIVE_MAP.patients], 
             };
 
-            const folder = await drive.files.create({
-                resource: fileMetadata,
-                fields: "id, webViewLink",
-            });
-
-            const patientFolderId = folder.data.id;
-            const driveLink = folder.data.webViewLink;
-
-            // 2. Criar Subpastas Padronizadas
-            const subfolders = [
-                "1. Documentos Pessoais",
-                "2. Contratos Assinados",
-                "3. Exames e Risco",
-                "4. Fotos (Antes/Depois)",
-                "5. Prontuário",
-                "6. Logs e Comunicação"
-            ];
-
-            // Cria tudo em paralelo (Rápido)
-            await Promise.all(subfolders.map(async (subName) => {
+            const folder = await drive.files.create({ resource: fileMetadata, fields: "id, webViewLink" });
+            
+            // Cria subpastas padrão
+            const subfolders = ["1. Documentos", "2. Contratos", "3. Exames", "4. Fotos", "5. Prontuário", "6. Logs"];
+            await Promise.all(subfolders.map(async (name) => {
                 await drive.files.create({
-                    resource: {
-                        name: subName,
-                        mimeType: "application/vnd.google-apps.folder",
-                        parents: [patientFolderId]
-                    }
+                    resource: { name, mimeType: "application/vnd.google-apps.folder", parents: [folder.data.id] }
                 });
             }));
 
-            // Retorna o link para o App salvar no Firestore
-            res.status(200).json({ status: "success", driveLink, folderId: patientFolderId });
+            res.status(200).json({ status: "success", driveLink: folder.data.webViewLink });
 
         } catch (error) {
-            console.error("Erro no Drive:", error);
+            console.error(error);
             res.status(500).json({ error: error.message });
         }
     });
 });
 
-/**
- * ROBÔ 2: BIBLIOTECÁRIO (LISTAR ARQUIVOS)
- * Recebe: { folderType: 'sops' | 'marketing' | 'adm' }
- * Faz: Lista os arquivos PDF/Doc da pasta solicitada para mostrar no App
- */
+// ---------------------------------------------------------
+// 🤖 ROBÔ 2: BIBLIOTECÁRIO (LISTAR ARQUIVOS)
+// Permite que o site mostre os arquivos de SOPs ou Marketing
+// ---------------------------------------------------------
 exports.listDriveFiles = functions.https.onRequest((req, res) => {
     cors(req, res, async () => {
         try {
             const drive = await getDriveClient();
-            const { folderType } = req.body; // ex: 'sops'
+            const { folderKey } = req.body; // ex: 'sops', 'marketing', 'adm'
 
-            const targetFolderId = DRIVE_MAP[folderType];
-            if (!targetFolderId) {
-                return res.status(400).json({ error: "Tipo de pasta inválido" });
-            }
+            const targetId = DRIVE_MAP[folderKey];
+            if(!targetId) return res.status(400).json({ error: "Pasta inválida" });
 
-            // Busca arquivos (não deletados) dentro da pasta escolhida
             const response = await drive.files.list({
-                q: `'${targetFolderId}' in parents and trashed = false`,
+                q: `'${targetId}' in parents and trashed = false`,
                 fields: 'files(id, name, webViewLink, iconLink, mimeType)',
                 orderBy: 'name'
             });
 
             res.status(200).json({ files: response.data.files });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+});
+
+// ---------------------------------------------------------
+// 🤖 ROBÔ 3: INTELIGÊNCIA (GEMINI CHAT)
+// ---------------------------------------------------------
+exports.chatWithGemini = functions.https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        try {
+            const { message, context } = req.body;
+
+            const vertexAI = new VertexAI({ project: PROJECT_ID, location: LOCATION });
+            const model = vertexAI.getGenerativeModel({ model: 'gemini-pro' });
+
+            const systemPrompt = `
+                Você é o VZT AI. Contexto: ${context || "Geral"}.
+                Se o contexto for um paciente, considere que temos acesso aos exames na pasta do Drive.
+                Responda de forma profissional.
+            `;
+
+            const result = await model.generateContent(`${systemPrompt}\n\nUsuário: ${message}`);
+            const response = result.response.candidates[0].content.parts[0].text;
+
+            res.status(200).json({ reply: response });
 
         } catch (error) {
-            console.error("Erro ao listar:", error);
-            res.status(500).json({ error: error.message });
+            console.error("Erro Gemini:", error);
+            res.status(500).json({ error: "Erro na IA." });
         }
     });
 });
