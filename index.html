@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VZT Ecossistema | Acesso Restrito</title>
+    <title>VZT Ecossistema | Master Integrated</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -27,29 +27,40 @@
             }
         }
     </script>
+
     <style>
+        /* Scrollbar Personalizada */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
+        /* Animações */
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Navegação Ativa */
         .nav-active {
             background-color: #27272a;
             color: #ffffff;
             border-left: 3px solid #3b82f6;
         }
 
+        /* Checkbox Riscado */
         .task-checkbox:checked + div {
             text-decoration: line-through;
             color: #94a3b8;
         }
         
+        /* Colunas do Kanban */
         .kanban-col { min-width: 320px; }
+        .kanban-card { transition: all 0.2s; }
+        .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         
-        /* LAYOUT CLEAN (BRANCO) */
+        /* Gráfico CSS Puro (Marketing) */
+        .bar-container { position: relative; height: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease; }
+        
+        /* Modo Login (Tela Cheia) */
         body.login-mode { overflow: hidden; background-color: #f8fafc; }
     </style>
 
@@ -58,7 +69,7 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIGURAÇÃO
+        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyAfbaZl283P9mcdo8Y1_-TQV4rO6jBr1pA",
             authDomain: "vzt-ecossistema.firebaseapp.com",
@@ -77,15 +88,13 @@
         window.vztAuth = auth;
         window.vztDb = db;
 
-        // ======================================================
-        // 🔒 LISTA VIP (EDITAR AQUI)
-        // ======================================================
+        // --- LISTA DE ACESSO (Segurança) ---
         const ALLOWED_USERS = [
-            "ingrid@leiriaconsulting.com",           // <--- COLOQUE SEU EMAIL AQUI
-            "drvizzotto@vizzotto.com.br"    // Email do Doutor
+            "ingrid@leiriaconsulting.com",
+            "drvizzotto@vizzotto.com.br"
         ];
 
-        // --- LOGIN COM VERIFICAÇÃO ---
+        // --- LOGIN LOGIC ---
         window.handleLogin = async () => {
             const btn = document.getElementById('btn-login-google');
             const errorMsg = document.getElementById('login-error-msg');
@@ -95,16 +104,12 @@
                 const result = await signInWithPopup(auth, provider);
                 const userEmail = result.user.email;
 
-                // VERIFICAÇÃO DE SEGURANÇA
                 if (!ALLOWED_USERS.includes(userEmail)) {
-                    await signOut(auth); // Desloga imediatamente
-                    errorMsg.innerText = `Acesso negado para: ${userEmail}. Contate o administrador.`;
+                    await signOut(auth);
+                    errorMsg.innerText = `Acesso negado para: ${userEmail}.`;
                     errorMsg.classList.remove('hidden');
                     btn.innerHTML = 'Tentar Outra Conta';
-                } else {
-                    // Sucesso: O onAuthStateChanged cuidará do resto
                 }
-
             } catch (error) {
                 console.error(error);
                 btn.innerHTML = 'Erro no Login. Tente novamente.';
@@ -149,7 +154,7 @@
             
             setTimeout(async () => {
                 await addDoc(collection(db, "clinics", CLINIC_ID, "chat_logs"), {
-                    text: "Analisando dados da clínica...", sender: 'ai', timestamp: new Date()
+                    text: "Conexão Gemini em breve...", sender: 'ai', timestamp: new Date()
                 });
             }, 1000);
         }
@@ -160,13 +165,7 @@
             let html = '';
             if (sender === 'user') {
                 const isMe = userName === auth.currentUser.displayName.split(' ')[0];
-                html = `
-                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-4">
-                        <span class="text-[10px] text-slate-400 mb-1 px-1">${isMe ? 'Você' : userName}</span>
-                        <div class="${isMe ? 'bg-slate-900 text-white rounded-tr-xl' : 'bg-slate-200 text-slate-700 rounded-tl-xl'} p-3 rounded-lg rounded-b-xl text-sm max-w-md shadow-sm">
-                            ${text}
-                        </div>
-                    </div>`;
+                html = `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-4"><span class="text-[10px] text-slate-400 mb-1 px-1">${isMe ? 'Você' : userName}</span><div class="${isMe ? 'bg-slate-900 text-white rounded-tr-xl' : 'bg-slate-200 text-slate-700 rounded-tl-xl'} p-3 rounded-lg rounded-b-xl text-sm max-w-md shadow-sm">${text}</div></div>`;
             } else {
                 html = `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
             }
@@ -179,25 +178,17 @@
             const appScreen = document.getElementById('app-screen');
             const userAvatar = document.getElementById('user-avatar-area');
 
-            // Verifica novamente se o usuário está na lista (para persistência de sessão)
             if (user && ALLOWED_USERS.includes(user.email)) {
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
                 document.body.classList.remove('login-mode');
                 
                 if(userAvatar) {
-                    userAvatar.innerHTML = `
-                        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair de ${user.email}">
-                            <div class="text-right hidden sm:block">
-                                <p class="text-xs font-bold text-slate-900">${user.displayName}</p>
-                                <p class="text-[10px] text-emerald-600 font-bold uppercase">Acesso Autorizado</p>
-                            </div>
-                            <img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm">
-                        </div>`;
+                    userAvatar.innerHTML = `<div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair de ${user.email}"><div class="text-right hidden sm:block"><p class="text-xs font-bold text-slate-900">${user.displayName}</p><p class="text-[10px] text-emerald-600 font-bold uppercase">Online</p></div><img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm"></div>`;
                 }
                 window.loadChatHistory();
             } else {
-                if(user) signOut(auth); // Garante logout se não autorizado
+                if(user) signOut(auth);
                 loginScreen.classList.remove('hidden');
                 appScreen.classList.add('hidden');
                 document.body.classList.add('login-mode');
@@ -208,25 +199,17 @@
 <body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden login-mode">
 
     <div id="login-screen" class="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center fade-in">
-        
         <div class="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl border border-slate-100 text-center relative">
             <div class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-3xl font-bold text-white mx-auto mb-8 shadow-lg shadow-slate-200">V</div>
-            
             <h1 class="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Bem-vindo(a)!</h1>
             <p class="text-slate-500 text-sm mb-8">Acesse o ecossistema VZT com sua conta corporativa.</p>
-            
             <div id="login-error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg font-bold"></div>
-
             <button id="btn-login-google" onclick="handleLogin()" class="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3.5 px-4 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 mb-6 shadow-sm group">
                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 <span class="group-hover:text-slate-900">Entrar com Google</span>
             </button>
-
-            <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ambiente Seguro
-            </div>
+            <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 uppercase tracking-widest font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ambiente Seguro</div>
         </div>
-        
         <p class="mt-8 text-xs text-slate-400">© 2024 VZT Ecossistema. Apenas pessoal autorizado.</p>
     </div>
 
@@ -260,7 +243,7 @@
 
                 <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação & Equipe</div>
                 <button onclick="navTo('tasks', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
-                    <i data-lucide="trello" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i><span class="text-sm font-medium">Gestão de Tarefas</span>
+                    <i data-lucide="trello" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i><span class="text-sm font-medium">Central de Tarefas</span>
                 </button>
                 <button onclick="navTo('patients', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
                     <i data-lucide="users" class="w-4 h-4"></i><span class="text-sm font-medium">Pacientes 360º</span>
@@ -375,51 +358,21 @@
 
                 <div id="view-tasks" class="view-section hidden h-full flex flex-col p-8 fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <div><h1 class="text-2xl font-bold text-slate-900">Gestão da Equipe</h1><p class="text-slate-500">Quadro de tarefas e demandas internas.</p></div>
-                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Tarefa</button>
+                        <div><h1 class="text-2xl font-bold text-slate-900">Central de Tarefas</h1><p class="text-slate-500">Gestão integrada com pacientes.</p></div>
+                        <button onclick="openTaskModal()" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-800 transition"><i data-lucide="plus" class="w-4 h-4"></i> Nova Tarefa</button>
                     </div>
-                    
                     <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">A Fazer (Backlog)</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div>
-                            <div class="space-y-2 overflow-y-auto flex-1">
-                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                    <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mb-2 inline-block">Urgente</span>
-                                    <p class="text-sm font-bold text-slate-800">Comprar Fios de Sutura</p>
-                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">Enf</div><span class="text-xs text-slate-400">10 Nov</span></div>
-                                </div>
-                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                    <p class="text-sm font-bold text-slate-800">Treinar nova secretária</p>
-                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Adm</div><span class="text-xs text-slate-400">15 Nov</span></div>
-                                </div>
-                            </div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full w-80 flex-shrink-0">
+                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">A Fazer</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">3</span></div>
+                            <div class="space-y-2 overflow-y-auto flex-1 p-1" id="col-todo"></div>
                         </div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full w-80 flex-shrink-0">
                             <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Em Andamento</h3><span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">2</span></div>
-                            <div class="space-y-2 overflow-y-auto flex-1">
-                                <div class="bg-white p-3 rounded-lg border border-l-4 border-l-blue-500 border-slate-200 shadow-sm cursor-pointer">
-                                    <p class="text-sm font-bold text-slate-800">Cotação Equipamentos Laser</p>
-                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-blue-600 font-bold">Em progresso</span></div>
-                                </div>
-                            </div>
+                            <div class="space-y-2 overflow-y-auto flex-1 p-1" id="col-progress"></div>
                         </div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
-                            <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Revisão</h3><span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">1</span></div>
-                            <div class="space-y-2 overflow-y-auto flex-1">
-                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer">
-                                    <p class="text-sm font-bold text-slate-800">Aprovar posts Instagram</p>
-                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-amber-600">Aguardando aprovação</span></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full w-80 flex-shrink-0">
                             <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Concluído</h3><span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div>
-                            <div class="space-y-2 overflow-y-auto flex-1 opacity-60">
-                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                    <p class="text-sm font-bold text-slate-500 line-through">Pagamento Aluguel</p>
-                                    <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Fin</div><span class="text-xs text-emerald-600">Feito</span></div>
-                                </div>
-                            </div>
+                            <div class="space-y-2 overflow-y-auto flex-1 p-1 opacity-60" id="col-done"></div>
                         </div>
                     </div>
                 </div>
@@ -452,11 +405,11 @@
                         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                             <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="bar-chart" class="w-4 h-4 text-orange-500"></i> Evolução de Leads x Custo</h3>
                             <div class="h-64 flex items-end justify-between gap-2 px-2 border-b border-slate-100 pb-2">
-                                <div class="w-full bg-orange-100 rounded-t h-[40%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[60%] rounded-t opacity-80"></div></div>
-                                <div class="w-full bg-orange-100 rounded-t h-[55%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[50%] rounded-t opacity-80"></div></div>
-                                <div class="w-full bg-orange-100 rounded-t h-[70%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[75%] rounded-t opacity-80"></div></div>
-                                <div class="w-full bg-orange-100 rounded-t h-[60%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[65%] rounded-t opacity-80"></div></div>
-                                <div class="w-full bg-orange-100 rounded-t h-[85%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[80%] rounded-t opacity-80"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t bar-container" style="height: 40%"><div class="absolute bottom-0 w-full bg-orange-500 h-full opacity-80 rounded-t"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t bar-container" style="height: 55%"><div class="absolute bottom-0 w-full bg-orange-500 h-full opacity-80 rounded-t"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t bar-container" style="height: 70%"><div class="absolute bottom-0 w-full bg-orange-500 h-full opacity-80 rounded-t"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t bar-container" style="height: 60%"><div class="absolute bottom-0 w-full bg-orange-500 h-full opacity-80 rounded-t"></div></div>
+                                <div class="w-full bg-orange-100 rounded-t bar-container" style="height: 85%"><div class="absolute bottom-0 w-full bg-orange-500 h-full opacity-80 rounded-t"></div></div>
                             </div>
                             <div class="flex justify-center gap-6 mt-4 text-xs"><span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> Leads</span><span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-100 rounded-full"></div> Investimento</span></div>
                         </div>
@@ -501,7 +454,22 @@
                                 <div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase tracking-wider">LTV</p><h2 class="text-3xl font-bold text-emerald-600" id="p-ltv">R$ 0</h2></div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div><div class="space-y-6"><div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-4"><i data-lucide="check-square" class="w-5 h-5 text-slate-600 inline mr-2"></i> Tasks</h3><div class="space-y-3" id="p-tasks"></div></div></div></div>
+                        
+                        <div class="flex gap-6 border-b border-slate-200 mb-6">
+                            <button class="pb-3 border-b-2 border-slate-900 font-bold text-slate-900 text-sm">Geral & Timeline</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4"></i> Tarefas</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700 flex items-center gap-2"><i data-lucide="mic" class="w-4 h-4"></i> Gravações</button>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 space-y-6">
+                                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm h-fit">
+                                <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-900">Tarefas Vinculadas</h3></div>
+                                <div class="space-y-3" id="p-tasks-widget"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -518,19 +486,38 @@
                 <div id="view-ai-chat" class="view-section hidden h-full flex flex-col relative bg-slate-50 p-6 fade-in">
                     <div class="flex items-center justify-between mb-4">
                         <div><h1 class="text-2xl font-bold text-slate-900">VZT AI</h1><p class="text-slate-500">Assistente Inteligente.</p></div>
-                        <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded border border-purple-200 flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Gemini Powered</div>
+                        <div class="flex items-center gap-3">
+                            <select class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-600 font-medium">
+                                <option>Contexto Geral</option>
+                                <option>Ana Silva</option>
+                                <option>Carlos Souza</option>
+                            </select>
+                            <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded border border-purple-200 flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Gemini</div>
+                        </div>
                     </div>
                     <div id="chat-messages-area" class="flex-1 overflow-y-auto mb-4 p-6 border border-slate-200 rounded-xl bg-white shadow-sm space-y-4">
                         <div class="flex flex-col items-center justify-center h-full text-slate-400 opacity-50"><i data-lucide="message-square" class="w-12 h-12 mb-2"></i><p class="text-sm">O histórico aparecerá aqui após o login.</p></div>
                     </div>
                     <div class="flex gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-                        <input id="chat-input" type="text" class="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-700" placeholder="Pergunte sobre a agenda ou financeiro..." onkeypress="if(event.key === 'Enter') sendToCloud()">
+                        <input id="chat-input" type="text" class="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-700" placeholder="Digite sua mensagem..." onkeypress="if(event.key === 'Enter') sendToCloud()">
                         <button onclick="sendToCloud()" class="bg-slate-900 text-white px-6 rounded-lg font-bold hover:bg-slate-800 transition flex items-center gap-2"><span>Enviar</span> <i data-lucide="send" class="w-4 h-4"></i></button>
                     </div>
                 </div>
 
                 <div id="view-ai-voice" class="view-section hidden max-w-4xl mx-auto space-y-8 p-8 fade-in">
-                    <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div><div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div><div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2"><i data-lucide="play" class="w-5 h-5"></i> Iniciar</button></div></div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                        <div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div>
+                        <div class="max-w-xs mx-auto mb-6 text-left">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Vincular Gravação a:</label>
+                            <select class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
+                                <option>Selecionar Paciente...</option>
+                                <option>Ana Silva</option>
+                                <option>Carlos Souza</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg hover:bg-slate-800"><i data-lucide="play" class="w-5 h-5"></i> Iniciar Gravação</button></div>
+                    </div>
                 </div>
 
                 <div id="view-sops" class="view-section hidden space-y-8 p-8 fade-in">
@@ -553,19 +540,40 @@
         </main>
     </div>
 
+    <div id="task-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center fade-in">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl">
+            <h3 class="font-bold text-lg mb-4">Nova Tarefa</h3>
+            <input type="text" placeholder="Título da tarefa..." class="w-full border border-slate-300 rounded p-2 mb-3 text-sm focus:border-blue-500 outline-none">
+            
+            <label class="block text-xs font-bold text-slate-500 mb-1">Vincular Paciente (Opcional)</label>
+            <select class="w-full border border-slate-300 rounded p-2 mb-4 text-sm bg-white focus:border-blue-500 outline-none">
+                <option value="">Nenhum</option>
+                <option value="1">Ana Silva</option>
+                <option value="2">Carlos Souza</option>
+            </select>
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('task-modal').classList.add('hidden')" class="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
+                <button onclick="addNewTaskMock()" class="px-4 py-2 text-sm bg-slate-900 text-white rounded font-bold hover:bg-slate-800">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
-        // --- DADOS PACIENTES ---
+        // DADOS MOCK (Serão substituídos pelo Firebase)
         const patientsData = [
-            { id: 1, name: "Ana Silva", status: "Pós-Operatório", procedure: "Lipoaspiração HD", lastContact: "Hoje 14:30", ltv: "R$ 42.500", timeline: [{ title: "Retorno 30 Dias", date: "Hoje", desc: "Avaliação." }], tasks: ["Agendar Drenagem"] },
-            { id: 2, name: "Carlos Souza", status: "Pré-Operatório", procedure: "Rinoplastia", lastContact: "Ontem", ltv: "R$ 18.000", timeline: [{ title: "Exames", date: "Ontem", desc: "Aguardando risco." }], tasks: ["Cobrar Risco"] },
-            { id: 3, name: "Mariana Costa", status: "Negociação", procedure: "Botox", lastContact: "2h atrás", ltv: "R$ 0", timeline: [{ title: "Lead", date: "Hoje", desc: "Instagram Ads." }], tasks: ["Follow-up"] },
-            { id: 4, name: "Roberto Lima", status: "Consulta Agendada", procedure: "Dermato", lastContact: "3d atrás", ltv: "R$ 800", timeline: [{ title: "Agendamento", date: "18 Nov", desc: "Consulta." }], tasks: ["Confirmar"] },
-            { id: 5, name: "Fernanda T.", status: "Pré-Operatório", procedure: "Silicone", lastContact: "5d atrás", ltv: "R$ 22.000", timeline: [{ title: "Pré-Anestésico", date: "Amanhã", desc: "Avaliação." }], tasks: ["Reservar Prótese"] }
+            { id: 1, name: "Ana Silva", status: "Pós-Operatório", procedure: "Lipoaspiração HD", timeline: [{ title: "Gravação de Consulta", date: "Hoje 10:00", desc: "Áudio salvo no Drive.", icon: "mic" }] },
+            { id: 2, name: "Carlos Souza", status: "Pré-Operatório", procedure: "Rinoplastia", timeline: [] }
         ];
 
-        // --- NAVEGAÇÃO ---
+        const tasksData = [
+            { id: 101, title: "Comprar Fios", patientId: null, status: "todo" },
+            { id: 102, title: "Revisar Exames Ana", patientId: 1, status: "todo" }, 
+            { id: 103, title: "Cotação Laser", patientId: null, status: "progress" }
+        ];
+
         function navTo(viewId, btnElement) {
             if(btnElement) {
                 document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('nav-active'); el.classList.add('text-slate-400'); });
@@ -574,25 +582,31 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById('view-' + viewId);
             if(target) target.classList.remove('hidden');
-            else document.getElementById('view-control-tower').classList.remove('hidden');
+
+            const titleEl = document.getElementById('page-title');
+            if(titleEl) titleEl.innerText = viewId.replace('-', ' ').toUpperCase();
 
             if(viewId === 'patients') renderPatientsTable();
-            
-            // Se for chat, carrega histórico
-            if(viewId === 'ai-chat' && window.loadChatHistory) window.loadChatHistory();
-            
-            const titles = { 'control-tower': 'Control Tower', 'marketing': 'Marketing & Tráfego', 'tasks': 'Gestão de Tarefas', 'patients': 'Pacientes 360º', 'ai-chat': 'VZT AI Chat', 'sops': 'Protocolos', 'settings': 'Configurações' };
-            const titleEl = document.getElementById('page-title');
-            if(titleEl) titleEl.innerText = titles[viewId] || 'VZT Ecossistema';
+            if(viewId === 'tasks') renderKanbanBoard();
         }
 
-        // --- LÓGICA PACIENTES ---
+        // --- RENDERIZADORES ---
         function renderPatientsTable() {
             const tbody = document.getElementById('patients-table-body');
             tbody.innerHTML = '';
             patientsData.forEach(p => {
-                const statusColor = p.status.includes('Pré') ? 'bg-purple-100 text-purple-700' : p.status.includes('Pós') ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700';
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-semibold text-slate-900">${p.name}</td><td class="px-6 py-4"><span class="${statusColor} px-2 py-1 rounded-full text-xs font-bold">${p.status}</span></td><td class="px-6 py-4 text-slate-600">${p.procedure}</td><td class="px-6 py-4 text-slate-500 text-xs">${p.lastContact}</td><td class="px-6 py-4 text-right"><button onclick="openPatientProfile(${p.id})" class="bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 ml-auto"><i data-lucide="folder-open" class="w-3 h-3"></i> Abrir Pasta</button></td></tr>`;
+                const statusColor = p.status.includes('Pré') ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="openPatientProfile(${p.id})"><td class="px-6 py-4 font-semibold text-slate-900">${p.name}</td><td class="px-6 py-4"><span class="${statusColor} px-2 py-1 rounded-full text-xs font-bold">${p.status}</span></td><td class="px-6 py-4 text-slate-600">${p.procedure}</td><td class="px-6 py-4 text-right"><i data-lucide="chevron-right" class="w-4 h-4 ml-auto text-slate-400"></i></td></tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        function renderKanbanBoard() {
+            ['col-todo', 'col-progress', 'col-done'].forEach(id => document.getElementById(id).innerHTML = '');
+            tasksData.forEach(task => {
+                let colId = task.status === 'todo' ? 'col-todo' : task.status === 'progress' ? 'col-progress' : 'col-done';
+                let patientTag = task.patientId ? `<div class="mt-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded inline-flex items-center gap-1 font-bold border border-blue-100"><i data-lucide="user" class="w-3 h-3"></i> Ana Silva</div>` : '';
+                document.getElementById(colId).innerHTML += `<div class="kanban-card bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer mb-2"><p class="text-sm font-bold text-slate-800">${task.title}</p>${patientTag}</div>`;
             });
             lucide.createIcons();
         }
@@ -603,23 +617,32 @@
             document.getElementById('p-name').innerText = p.name;
             document.getElementById('p-avatar').innerText = p.name.split(' ').map(n => n[0]).join('');
             document.getElementById('p-status').innerText = p.status;
-            document.getElementById('p-ltv').innerText = p.ltv;
             
+            // Timeline
             const timelineDiv = document.getElementById('p-timeline'); timelineDiv.innerHTML = '';
-            p.timeline.forEach(t => timelineDiv.innerHTML += `<div class="relative"><div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 border-white bg-slate-300"></div><h4 class="text-sm font-bold text-slate-900">${t.title}</h4><span class="text-xs text-slate-400 block mb-1">${t.date}</span><p class="text-sm text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${t.desc}</p></div>`);
+            p.timeline.forEach(t => timelineDiv.innerHTML += `<div class="relative"><div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 border-white bg-slate-300 flex items-center justify-center"><i data-lucide="${t.icon || 'circle'}" class="w-3 h-3 text-slate-600"></i></div><h4 class="text-sm font-bold text-slate-900">${t.title}</h4><span class="text-xs text-slate-400 block mb-1">${t.date}</span><p class="text-sm text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${t.desc}</p></div>`);
             
-            const tasksDiv = document.getElementById('p-tasks'); tasksDiv.innerHTML = '';
-            p.tasks.forEach(task => tasksDiv.innerHTML += `<div class="flex items-center gap-2"><input type="checkbox" class="task-checkbox rounded text-blue-600"><div class="text-sm text-slate-700">${task}</div></div>`);
+            // Tarefas deste paciente
+            const patientTasks = tasksData.filter(t => t.patientId === id);
+            const tasksWidget = document.getElementById('p-tasks-widget'); tasksWidget.innerHTML = '';
+            if(patientTasks.length > 0) {
+                patientTasks.forEach(t => tasksWidget.innerHTML += `<div class="flex items-center gap-2 p-2 border border-slate-100 rounded bg-slate-50"><input type="checkbox" class="task-checkbox rounded text-blue-600"><div class="text-sm text-slate-700 font-medium">${t.title}</div></div>`);
+            } else {
+                tasksWidget.innerHTML = '<p class="text-xs text-slate-400">Nenhuma tarefa pendente.</p>';
+            }
 
             document.getElementById('patients-list-container').classList.add('hidden');
             document.getElementById('patient-detail-view').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function closePatientProfile() {
             document.getElementById('patient-detail-view').classList.add('hidden');
             document.getElementById('patients-list-container').classList.remove('hidden');
         }
+
+        function openTaskModal() { document.getElementById('task-modal').classList.remove('hidden'); }
+        function addNewTaskMock() { alert("Tarefa criada! (Backend pendente)"); document.getElementById('task-modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
-
