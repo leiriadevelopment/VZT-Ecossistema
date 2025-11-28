@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VZT Ecossistema | Cloud Native</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script type="module">
+        // Importar as funções que precisamos do Google Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        // import { getVertexAI, getGenerativeModel } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-vertexai.js"; 
+
+        // --- CONFIGURAÇÃO (VOCÊ PEGA ISSO NO CONSOLE DO FIREBASE) ---
+        const firebaseConfig = {
+    apiKey: "AIzaSyAfbaZl283P9mcdo8Y1_-TQV4rO6jBr1pA",
+    authDomain: "vzt-ecossistema.firebaseapp.com",
+    projectId: "vzt-ecossistema",
+    storageBucket: "vzt-ecossistema.firebasestorage.app",
+    messagingSenderId: "108606764562",
+    appId: "1:108606764562:web:5056575809af5146814acb",
+    measurementId: "G-VQP7YRJMCM"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app); // O BANCO DE DADOS (MEMÓRIA)
+        const auth = getAuth(app);    // LOGIN GOOGLE
+        const provider = new GoogleAuthProvider();
+
+        // Tornar funções globais para usar no HTML
+        window.vztAuth = auth;
+        window.vztDb = db;
+        window.loginGoogle = () => signInWithPopup(auth, provider);
+        
+        // --- LÓGICA DE MEMÓRIA (CHAT) ---
+        // Isso ouve o banco de dados em TEMPO REAL. Se você mudar no celular, muda no PC.
+        window.loadChatHistory = function() {
+            const chatContainer = document.getElementById('chat-messages-area');
+            if(!auth.currentUser) return;
+
+            const q = query(collection(db, "chats", auth.currentUser.uid, "messages"), orderBy("timestamp", "asc"));
+            
+            // "onSnapshot" é a conexão viva. Sempre que o banco muda, isso roda.
+            onSnapshot(q, (snapshot) => {
+                chatContainer.innerHTML = ''; // Limpa para redesenhar
+                snapshot.forEach((doc) => {
+                    const msg = doc.data();
+                    appendMessageToUI(msg.text, msg.sender);
+                });
+            });
+        }
+
+        // Enviar mensagem (Salva no Banco -> Banco avisa a tela)
+        window.sendToCloud = async function() {
+            const input = document.getElementById('chat-input');
+            const text = input.value;
+            if(!text || !auth.currentUser) return;
+
+            input.value = ''; // Limpa input
+
+            // 1. Salva a mensagem do usuário na "Memória" (Firestore)
+            await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
+                text: text,
+                sender: 'user',
+                timestamp: new Date()
+            });
+
+            // 2. AQUI VOCÊ CHAMARIA A IA (Cloud Function ou Vertex AI)
+            // Por enquanto, simulamos a resposta salvando no banco também
+            setTimeout(async () => {
+                await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
+                    text: "Recebi sua mensagem e salvei na nuvem do Google. (Integração Vertex AI pendente)",
+                    sender: 'ai',
+                    timestamp: new Date()
+                });
+            }, 1000);
+        }
+
+        // Helper de UI
+        function appendMessageToUI(text, sender) {
+            const container = document.getElementById('chat-messages-area');
+            let html = '';
+            if (sender === 'user') {
+                html = `<div class="flex justify-end mb-4"><div class="bg-slate-900 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md shadow-sm">${text}</div></div>`;
+            } else {
+                html = `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
+            }
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Monitorar Status do Usuário
+        onAuthStateChanged(auth, (user) => {
+            const statusDiv = document.getElementById('auth-status');
+            if (user) {
+                statusDiv.innerHTML = `<span class="text-emerald-600 font-bold text-xs flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online: ${user.displayName}</span>`;
+                window.loadChatHistory();
+            } else {
+                statusDiv.innerHTML = `<button onclick="loginGoogle()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Entrar com Google</button>`;
+            }
+        });
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden">
+    
+    <aside class="w-72 bg-[#09090b] text-slate-400 flex flex-col z-30">
+        <div class="h-16 flex items-center px-6 border-b border-zinc-800">
+            <h1 class="text-white font-bold text-lg">VZT <span class="text-xs text-purple-500">CLOUD</span></h1>
+        </div>
+        <nav class="p-4 space-y-1">
+            <button onclick="document.getElementById('view-chat').classList.remove('hidden')" class="w-full text-left px-3 py-2 text-sm hover:text-white">Chat IA</button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+            <h2 class="font-bold text-slate-800">Dashboard</h2>
+            <div id="auth-status">Verificando...</div>
+        </header>
+
+        <div class="flex-1 overflow-hidden relative">
+            
+            <div id="view-chat" class="absolute inset-0 bg-slate-50 flex flex-col p-6">
+                <div id="chat-messages-area" class="flex-1 overflow-y-auto mb-4 p-4 border border-slate-200 rounded-xl bg-white shadow-sm">
+                    <div class="text-center text-slate-400 mt-10">Faça login para ver o histórico.</div>
+                </div>
+                <div class="flex gap-2">
+                    <input id="chat-input" type="text" class="flex-1 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500" placeholder="Digite algo para salvar na memória...">
+                    <button onclick="sendToCloud()" class="bg-purple-600 text-white px-6 rounded-xl font-bold hover:bg-purple-700">Enviar</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
