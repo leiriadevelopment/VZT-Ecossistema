@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VZT Ecossistema | Master Edition</title>
+    <title>VZT Ecossistema | CPF Compliance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -27,8 +27,9 @@
             }
         }
     </script>
+
     <style>
-        /* Scrollbar */
+        /* Scrollbar Personalizada */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -38,28 +39,28 @@
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Navegação */
+        /* Navegação Ativa */
         .nav-active {
             background-color: #27272a;
             color: #ffffff;
             border-left: 3px solid #3b82f6;
         }
 
-        /* Checkbox */
+        /* Checkbox Riscado */
         .task-checkbox:checked + div {
             text-decoration: line-through;
             color: #94a3b8;
         }
         
-        /* Kanban */
+        /* Colunas do Kanban */
         .kanban-col { min-width: 320px; }
         .kanban-card { transition: all 0.2s; }
         .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         
-        /* Gráfico CSS (Marketing) */
+        /* Gráfico CSS Puro (Marketing) */
         .bar-container { position: relative; height: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease; }
         
-        /* Login Mode */
+        /* Modo Login (Tela Cheia) */
         body.login-mode { overflow: hidden; background-color: #f8fafc; }
     </style>
 
@@ -68,7 +69,7 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIGURAÇÃO REAL
+        // --- CONFIGURAÇÃO FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyAfbaZl283P9mcdo8Y1_-TQV4rO6jBr1pA",
             authDomain: "vzt-ecossistema.firebaseapp.com",
@@ -87,40 +88,47 @@
         window.vztAuth = auth;
         window.vztDb = db;
 
-        // LISTA DE ACESSO
+        // --- LISTA DE ACESSO (Segurança) ---
         const ALLOWED_USERS = [
             "ingrid@leiriaconsulting.com",
             "drvizzotto@vizzotto.com.br"
         ];
 
-        // --- LOGIN ---
+        // --- LOGIN LOGIC ---
         window.handleLogin = async () => {
             const btn = document.getElementById('btn-login-google');
             const errorMsg = document.getElementById('login-error-msg');
+            
             try {
-                btn.innerHTML = 'Verificando...';
+                btn.innerHTML = 'Verificando credenciais...';
                 const result = await signInWithPopup(auth, provider);
-                if (!ALLOWED_USERS.includes(result.user.email)) {
+                const userEmail = result.user.email;
+
+                if (!ALLOWED_USERS.includes(userEmail)) {
                     await signOut(auth);
-                    errorMsg.innerText = `Acesso negado: ${result.user.email}`;
+                    errorMsg.innerText = `Acesso negado para: ${userEmail}.`;
                     errorMsg.classList.remove('hidden');
                     btn.innerHTML = 'Tentar Outra Conta';
                 }
             } catch (error) {
                 console.error(error);
-                btn.innerHTML = 'Erro no Login';
+                btn.innerHTML = 'Erro no Login. Tente novamente.';
             }
         }
 
-        window.handleLogout = () => signOut(auth).then(() => window.location.reload());
+        window.handleLogout = () => {
+            signOut(auth).then(() => window.location.reload());
+        }
 
-        // --- CHAT LOGIC ---
+        // --- DADOS COMPARTILHADOS (CLÍNICA) ---
         const CLINIC_ID = "MATRIZ_PRINCIPAL"; 
-        
+
         window.loadChatHistory = function() {
             const chatContainer = document.getElementById('chat-messages-area');
             if(!auth.currentUser || !chatContainer) return;
+            
             const q = query(collection(db, "clinics", CLINIC_ID, "chat_logs"), orderBy("timestamp", "asc"));
+            
             onSnapshot(q, (snapshot) => {
                 chatContainer.innerHTML = ''; 
                 snapshot.forEach((doc) => {
@@ -135,22 +143,22 @@
             const input = document.getElementById('chat-input');
             const contextSelect = document.getElementById('chat-context-select');
             const context = contextSelect ? contextSelect.value : "Geral";
-            
+
             const text = input.value;
             if(!text || !auth.currentUser) return;
             input.value = ''; 
             
             await addDoc(collection(db, "clinics", CLINIC_ID, "chat_logs"), {
                 text: text, 
-                context: context, 
+                context: context,
                 sender: 'user', 
-                userName: auth.currentUser.displayName.split(' ')[0], 
+                userName: auth.currentUser.displayName.split(' ')[0],
                 timestamp: new Date()
             });
             
             setTimeout(async () => {
                 await addDoc(collection(db, "clinics", CLINIC_ID, "chat_logs"), {
-                    text: `Registrado no contexto: **${context}**.`, sender: 'ai', timestamp: new Date()
+                    text: `Recebido. Vinculado a pasta: **${context}** (Drive).`, sender: 'ai', timestamp: new Date()
                 });
             }, 1000);
         }
@@ -178,7 +186,10 @@
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
                 document.body.classList.remove('login-mode');
-                if(userAvatar) userAvatar.innerHTML = `<div class="flex items-center gap-3 cursor-pointer" onclick="handleLogout()"><div class="text-right hidden sm:block"><p class="text-xs font-bold text-slate-900">${user.displayName}</p><p class="text-[10px] text-emerald-600 font-bold uppercase">Online</p></div><img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm"></div>`;
+                
+                if(userAvatar) {
+                    userAvatar.innerHTML = `<div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair de ${user.email}"><div class="text-right hidden sm:block"><p class="text-xs font-bold text-slate-900">${user.displayName}</p><p class="text-[10px] text-emerald-600 font-bold uppercase">Online</p></div><img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm"></div>`;
+                }
                 window.loadChatHistory();
             } else {
                 if(user) signOut(auth);
@@ -201,9 +212,7 @@
                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 <span class="group-hover:text-slate-900">Entrar com Google</span>
             </button>
-            <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ambiente Seguro
-            </div>
+            <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 uppercase tracking-widest font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ambiente Seguro</div>
         </div>
         <p class="mt-8 text-xs text-slate-400">© 2024 VZT Ecossistema. Apenas pessoal autorizado.</p>
     </div>
@@ -214,25 +223,29 @@
             <div class="h-16 flex items-center px-6 border-b border-zinc-800">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-white text-black flex items-center justify-center font-bold text-lg rounded-lg shadow-lg">V</div>
-                    <div><h1 class="text-white font-bold tracking-tight text-lg">VZT</h1><span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ECOSSISTEMA</span></div>
+                    <div>
+                        <h1 class="text-white font-bold tracking-tight text-lg">VZT</h1>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ECOSSISTEMA</span>
+                    </div>
                 </div>
             </div>
+
             <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-                <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia</div>
+                <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia & Growth</div>
                 <button onclick="navTo('control-tower', this)" class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="text-sm font-medium">Control Tower</span></button>
                 <button onclick="navTo('crm', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="filter" class="w-4 h-4"></i><span class="text-sm font-medium">CRM & Funil</span></button>
-                <button onclick="navTo('marketing', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white group"><i data-lucide="bar-chart-2" class="w-4 h-4 text-orange-400"></i><span class="text-sm font-medium">Marketing</span></button>
+                <button onclick="navTo('marketing', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white group"><i data-lucide="bar-chart-2" class="w-4 h-4 text-orange-400"></i><span class="text-sm font-medium">Marketing & Tráfego</span></button>
                 <button onclick="navTo('finance', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="dollar-sign" class="w-4 h-4"></i><span class="text-sm font-medium">Financeiro</span></button>
 
-                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação</div>
+                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação & Equipe</div>
                 <button onclick="navTo('tasks', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="trello" class="w-4 h-4 text-emerald-400"></i><span class="text-sm font-medium">Central de Tarefas</span></button>
                 <button onclick="navTo('patients', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="users" class="w-4 h-4"></i><span class="text-sm font-medium">Pacientes 360º</span></button>
                 <button onclick="navTo('agenda', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="calendar" class="w-4 h-4"></i><span class="text-sm font-medium">Agenda Médica</span></button>
                 <button onclick="navTo('whatsapp', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="message-circle" class="w-4 h-4"></i><span class="text-sm font-medium">WhatsApp Hub</span></button>
 
-                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Inteligência</div>
+                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">VZT Intelligence</div>
                 <button onclick="navTo('ai-chat', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="bot" class="w-4 h-4 text-purple-400"></i><span class="text-sm font-medium">VZT AI Chat</span></button>
-                <button onclick="navTo('ai-voice', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="mic" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">Gravador</span></button>
+                <button onclick="navTo('ai-voice', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="mic" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">AI Voice Recorder</span></button>
                 <button onclick="navTo('sops', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg hover:bg-vzt-sidebarHover hover:text-white"><i data-lucide="file-text" class="w-4 h-4"></i><span class="text-sm font-medium">Processos (SOPs)</span></button>
 
                 <div class="mt-auto pt-6 border-t border-zinc-800 mx-3 pb-4 space-y-1">
@@ -271,8 +284,8 @@
                         <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
                             <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i> Agenda (Next)</h3></div>
                             <div class="p-0 overflow-y-auto flex-1 divide-y divide-slate-50">
-                                <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div><h4 class="font-bold text-slate-900">Ana Silva</h4><p class="text-xs text-slate-500">Retorno Pós-Op</p></div>
-                                <div class="p-4 hover:bg-slate-50"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div><h4 class="font-bold text-slate-800">Carlos Souza</h4><p class="text-xs text-slate-500">Avaliação</p></div>
+                                <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div><h4 class="font-bold text-slate-900">Silva, Ana Maria - 123.456.789-00</h4><p class="text-xs text-slate-500">Retorno Pós-Op</p></div>
+                                <div class="p-4 hover:bg-slate-50"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div><h4 class="font-bold text-slate-800">Souza, Carlos - 987.654.321-11</h4><p class="text-xs text-slate-500">Avaliação</p></div>
                             </div>
                         </div>
                         <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
@@ -352,10 +365,10 @@
                 <div id="view-crm" class="view-section hidden h-full flex flex-col p-8 fade-in">
                     <div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold text-slate-900">Pipeline Comercial</h1></div><div class="flex gap-3"><input type="text" placeholder="Buscar Lead..." class="bg-white border rounded-lg px-3 py-2 text-sm w-64"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Lead</button></div></div>
                     <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Mariana Costa</span><span class="text-xs text-slate-400">2h</span></div><p class="text-xs text-slate-500">Rinoplastia</p></div></div></div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Carla Dias</span><span class="text-xs text-slate-400">1d</span></div><p class="text-xs text-slate-500">Lipo HD</p></div></div></div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-l-4 border-l-amber-400 border-slate-200 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Luiza M.</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div><p class="text-xs text-slate-500">Orçamento Enviado</p></div></div></div>
-                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Fechado / Ganho</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">42</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-emerald-900 text-sm">Ana Silva</span><span class="text-xs text-emerald-600">Pago</span></div><p class="text-xs text-emerald-700">Botox Day</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Costa, Mariana - 555...</span><span class="text-xs text-slate-400">2h</span></div><p class="text-xs text-slate-500">Rinoplastia</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Dias, Carla - 444...</span><span class="text-xs text-slate-400">1d</span></div><p class="text-xs text-slate-500">Lipo HD</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-l-4 border-l-amber-400 border-slate-200 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">M., Luiza - 333...</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div><p class="text-xs text-slate-500">Orçamento Enviado</p></div></div></div>
+                        <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Fechado / Ganho</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">42</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-emerald-900 text-sm">Silva, Ana - 123...</span><span class="text-xs text-emerald-600">Pago</span></div><p class="text-xs text-emerald-700">Botox Day</p></div></div></div>
                     </div>
                 </div>
 
@@ -367,87 +380,82 @@
                 <div id="view-patients" class="view-section hidden p-8 fade-in h-full flex flex-col relative">
                     <div id="patients-list-container" class="flex-1 flex flex-col space-y-6">
                         <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Base de Pacientes</h1><p class="text-slate-500">Prontuário Unificado.</p></div><div class="flex items-center gap-3 bg-white border border-slate-200 px-3 py-2 rounded-lg w-80 shadow-sm"><i data-lucide="search" class="w-4 h-4 text-slate-400"></i><input type="text" placeholder="Buscar..." class="bg-transparent text-sm w-full outline-none"></div></div>
-                        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200"><tr><th class="px-6 py-4">Paciente</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4">Última Interação</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody class="divide-y divide-slate-100" id="patients-table-body"></tbody></table></div>
+                        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200"><tr><th class="px-6 py-4">Paciente (Sobrenome, Nome - CPF)</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4">Última Interação</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody class="divide-y divide-slate-100" id="patients-table-body"></tbody></table></div>
                     </div>
                     <div id="patient-detail-view" class="hidden absolute inset-0 bg-slate-50 p-8 z-20 overflow-y-auto">
                         <button onclick="closePatientProfile()" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar</button>
                         <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex justify-between items-start">
-                            <div class="flex gap-6"><div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-3xl font-bold text-slate-400 border-4 border-white shadow-md" id="p-avatar">AS</div><div><h1 class="text-3xl font-bold text-slate-900" id="p-name">Ana Silva</h1><div class="flex gap-2 mt-2"><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase" id="p-status">Pós-Op</span></div></div></div>
+                            <div class="flex gap-6"><div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-3xl font-bold text-slate-400 border-4 border-white shadow-md" id="p-avatar">AS</div><div><h1 class="text-3xl font-bold text-slate-900" id="p-name">Silva, Ana Maria - 123...</h1><div class="flex gap-2 mt-2"><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase" id="p-status">Pós-Op</span></div></div></div>
                             <div class="flex gap-3">
-                                <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 shadow-sm"><i data-lucide="folder" class="w-4 h-4 text-blue-600"></i> Google Drive</button>
+                                <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 shadow-sm"><i data-lucide="folder" class="w-4 h-4 text-blue-600"></i> Google Drive Sync</button>
                                 <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-50 shadow-sm"><i data-lucide="message-circle" class="w-4 h-4 text-green-500"></i> WhatsApp</button>
                             </div>
                         </div>
+                        
+                        <div class="flex gap-6 border-b border-slate-200 mb-6">
+                            <button class="pb-3 border-b-2 border-slate-900 font-bold text-slate-900 text-sm">Geral & Timeline</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4"></i> Tarefas</button>
+                            <button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700 flex items-center gap-2"><i data-lucide="mic" class="w-4 h-4"></i> Gravações</button>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div>
-                            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm h-fit"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-900">Tarefas Vinculadas</h3></div><div class="space-y-3" id="p-tasks-widget"></div></div>
+                            <div class="lg:col-span-2 space-y-6">
+                                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div>
+                            </div>
+                            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm h-fit">
+                                <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-slate-900">Tarefas Vinculadas</h3></div>
+                                <div class="space-y-3" id="p-tasks-widget"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div id="view-agenda" class="view-section hidden space-y-6 p-8 fade-in">
                     <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Agenda Médica</h1></div><div class="flex gap-2"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync</button></div></div>
-                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm min-h-[600px]"><div class="grid grid-cols-1 divide-y divide-slate-100"><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">09:00</span><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Ana Silva - Retorno</span><span class="text-slate-500 text-xs">Sala 1</span></div></div><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">10:00</span><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Carlos Souza - Lipo HD</span><span class="text-slate-500 text-xs">Centro Cirúrgico</span></div></div></div></div>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm min-h-[600px]"><div class="grid grid-cols-1 divide-y divide-slate-100"><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">09:00</span><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Silva, Ana Maria - 123...</span><span class="text-slate-500 text-xs">Sala 1</span></div></div><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">10:00</span><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Souza, Carlos - 987...</span><span class="text-slate-500 text-xs">Centro Cirúrgico</span></div></div></div></div>
                 </div>
 
                 <div id="view-whatsapp" class="view-section hidden h-full flex fade-in bg-white">
-                    <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div><div class="flex-1 overflow-y-auto"><div class="p-4 border-b border-slate-100 bg-white border-l-4 border-l-blue-500 cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Ana P.</span><span class="text-xs text-slate-400">14:30</span></div><p class="text-xs text-slate-500 truncate">Doutor, meu rosto está inchado...</p></div></div></div>
-                    <div class="flex-1 flex flex-col bg-white"><div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800">Ana P.</h3></div><div class="flex-1 p-6 bg-white space-y-4 overflow-y-auto"><div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div><div class="flex justify-start"><div class="bg-slate-100 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div></div><div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-3"><input type="text" placeholder="Digite..." class="flex-1 border rounded-lg px-4 py-2 text-sm"><button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button></div></div>
+                    <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div><div class="flex-1 overflow-y-auto"><div class="p-4 border-b border-slate-100 bg-white border-l-4 border-l-blue-500 cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Silva, Ana Maria</span><span class="text-xs text-slate-400">14:30</span></div><p class="text-xs text-slate-500 truncate">Doutor, meu rosto está inchado...</p></div></div></div>
+                    <div class="flex-1 flex flex-col bg-white"><div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800">Silva, Ana Maria</h3></div><div class="flex-1 p-6 bg-white space-y-4 overflow-y-auto"><div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div><div class="flex justify-start"><div class="bg-slate-100 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div></div><div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-3"><input type="text" placeholder="Digite..." class="flex-1 border rounded-lg px-4 py-2 text-sm"><button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button></div></div>
                 </div>
 
-                <div id="view-ai-chat" class="view-section hidden h-full flex p-0 fade-in">
-                    <div class="w-64 border-r border-slate-200 bg-slate-50 flex flex-col">
-                        <div class="p-4 font-bold text-sm text-slate-500 uppercase tracking-wider">Histórico</div>
-                        <div class="flex-1 overflow-y-auto p-2 space-y-2">
-                            <div class="p-3 bg-white border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-purple-300 shadow-sm"><p class="font-bold text-slate-800">DRE Novembro</p><span class="text-[10px] text-slate-400">Ontem - Adm</span></div>
-                            <div class="p-3 bg-white border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-purple-300 shadow-sm"><p class="font-bold text-slate-800">Pós-Op Ana</p><span class="text-[10px] text-slate-400">Hoje - Paciente</span></div>
+                <div id="view-ai-chat" class="view-section hidden h-full flex flex-col relative bg-slate-50 p-6 fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <div><h1 class="text-2xl font-bold text-slate-900">VZT AI</h1><p class="text-slate-500">Assistente Inteligente.</p></div>
+                        <div class="flex items-center gap-3">
+                            <select class="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-600 font-medium">
+                                <option>Contexto Geral</option>
+                                <option>Silva, Ana Maria - 123...</option>
+                                <option>Souza, Carlos - 987...</option>
+                            </select>
+                            <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded border border-purple-200 flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Gemini</div>
                         </div>
                     </div>
-                    <div class="flex-1 flex flex-col relative bg-white">
-                        <div class="h-16 border-b border-slate-200 flex items-center justify-between px-6">
-                            <div><h1 class="text-xl font-bold text-slate-900">VZT AI</h1></div>
-                            <div class="flex items-center gap-3">
-                                <select id="chat-context-select" class="patient-select bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 outline-none">
-                                    <option value="Administrativo">📁 Geral / Adm</option>
-                                </select>
-                                <div class="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3"></i> Gemini</div>
-                            </div>
-                        </div>
-                        <div id="chat-messages-area" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-                        <div class="p-4 border-t border-slate-100">
-                            <div class="flex gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-inner">
-                                <input id="chat-input" type="text" class="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none text-slate-700" placeholder="Digite sua mensagem..." onkeypress="if(event.key === 'Enter') sendToCloud()">
-                                <button onclick="sendToCloud()" class="bg-slate-900 text-white px-6 rounded-lg font-bold hover:bg-slate-800 transition flex items-center gap-2"><span>Enviar</span> <i data-lucide="send" class="w-4 h-4"></i></button>
-                            </div>
-                        </div>
+                    <div id="chat-messages-area" class="flex-1 overflow-y-auto mb-4 p-6 border border-slate-200 rounded-xl bg-white shadow-sm space-y-4">
+                        <div class="flex flex-col items-center justify-center h-full text-slate-400 opacity-50"><i data-lucide="message-square" class="w-12 h-12 mb-2"></i><p class="text-sm">O histórico aparecerá aqui após o login.</p></div>
+                    </div>
+                    <div class="flex gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                        <input id="chat-input" type="text" class="flex-1 bg-transparent px-4 py-3 text-sm focus:outline-none text-slate-700" placeholder="Digite sua mensagem..." onkeypress="if(event.key === 'Enter') sendToCloud()">
+                        <button onclick="sendToCloud()" class="bg-slate-900 text-white px-6 rounded-lg font-bold hover:bg-slate-800 transition flex items-center gap-2"><span>Enviar</span> <i data-lucide="send" class="w-4 h-4"></i></button>
                     </div>
                 </div>
 
-                <div id="view-ai-voice" class="view-section hidden h-full flex p-0 fade-in">
-                    <div class="w-64 border-r border-slate-200 bg-slate-50 flex flex-col">
-                        <div class="p-4 font-bold text-sm text-slate-500 uppercase tracking-wider">Gravações</div>
-                        <div class="flex-1 overflow-y-auto p-2 space-y-2">
-                            <div class="p-3 bg-white border border-slate-200 rounded-lg text-sm cursor-pointer hover:shadow-md transition">
-                                <div class="flex justify-between mb-1"><i data-lucide="mic" class="w-4 h-4 text-blue-500"></i><i data-lucide="check" class="w-3 h-3 text-emerald-500"></i></div>
-                                <p class="font-bold text-slate-800">Consulta Inicial</p><span class="text-[10px] text-slate-400">Ana Silva • 10:00</span>
-                            </div>
+                <div id="view-ai-voice" class="view-section hidden max-w-4xl mx-auto space-y-8 p-8 fade-in">
+                    <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                        <div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div>
+                        
+                        <div class="max-w-xs mx-auto mb-6 text-left">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Vincular Gravação a:</label>
+                            <select class="patient-select w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
+                                <option>Selecionar Paciente...</option>
+                                <option>Silva, Ana Maria - 123...</option>
+                                <option>Souza, Carlos - 987...</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="flex-1 flex items-center justify-center bg-slate-50 p-8">
-                        <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-lg max-w-lg w-full">
-                            <div class="mb-8">
-                                <div class="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-100 shadow-xl"><i data-lucide="mic" class="w-10 h-10"></i></div>
-                                <h2 class="text-2xl font-bold text-slate-900">Gravador Inteligente</h2>
-                                <p class="text-slate-500 text-sm mt-2">Áudio transcrito e salvo no Drive.</p>
-                            </div>
-                            <div class="mb-8 text-left">
-                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Vincular a:</label>
-                                <select class="patient-select w-full border border-slate-300 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="Administrativo">📁 Geral / Adm</option>
-                                </select>
-                            </div>
-                            <button class="w-full py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center justify-center gap-3 shadow-lg hover:scale-105 transition transform"><i data-lucide="play" class="w-5 h-5"></i> Iniciar Gravação</button>
-                        </div>
+
+                        <div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg hover:bg-slate-800"><i data-lucide="play" class="w-5 h-5"></i> Iniciar Gravação</button></div>
                     </div>
                 </div>
 
@@ -472,18 +480,18 @@
     </div>
 
     <div id="task-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center fade-in">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl transform transition-all scale-100">
-            <h3 class="font-bold text-lg mb-4 text-slate-800">Nova Tarefa</h3>
-            <input id="new-task-title" type="text" placeholder="O que precisa ser feito?" class="w-full border border-slate-300 rounded-lg p-3 mb-4 text-sm focus:border-blue-500 outline-none transition">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl">
+            <h3 class="font-bold text-lg mb-4">Nova Tarefa</h3>
+            <input id="new-task-title" type="text" placeholder="Título da tarefa..." class="w-full border border-slate-300 rounded p-2 mb-3 text-sm focus:border-blue-500 outline-none">
             
-            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">Vincular Paciente (Opcional)</label>
-            <select id="new-task-patient" class="patient-select w-full border border-slate-300 rounded-lg p-3 mb-6 text-sm bg-white focus:border-blue-500 outline-none">
+            <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Vincular Paciente (Opcional)</label>
+            <select id="new-task-patient" class="patient-select w-full border border-slate-300 rounded p-2 mb-4 text-sm bg-white focus:border-blue-500 outline-none">
                 <option value="">Nenhum (Geral)</option>
                 </select>
             
             <div class="flex justify-end gap-2">
-                <button onclick="document.getElementById('task-modal').classList.add('hidden')" class="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded-lg font-medium">Cancelar</button>
-                <button onclick="addNewTaskMock()" class="px-6 py-2 text-sm bg-slate-900 text-white rounded-lg font-bold hover:bg-slate-800 shadow-md">Salvar Tarefa</button>
+                <button onclick="document.getElementById('task-modal').classList.add('hidden')" class="px-4 py-2 text-sm text-slate-500 hover:bg-slate-100 rounded">Cancelar</button>
+                <button onclick="addNewTaskMock()" class="px-4 py-2 text-sm bg-slate-900 text-white rounded font-bold hover:bg-slate-800">Salvar</button>
             </div>
         </div>
     </div>
@@ -491,16 +499,17 @@
     <script>
         lucide.createIcons();
 
-        // 1. DADOS MESTRES (Global)
+        // 1. DADOS MESTRES (Global - AGORA COMPLIANCE COM CPF)
         const patientsDB = [
-            { id: 1, name: "Ana Silva", status: "Pós-Operatório", procedure: "Lipoaspiração HD" },
-            { id: 2, name: "Carlos Souza", status: "Pré-Operatório", procedure: "Rinoplastia" },
-            { id: 3, name: "Mariana Costa", status: "Negociação", procedure: "Botox" }
+            { id: 1, name: "Silva, Ana Maria - 123.456.789-00", status: "Pós-Operatório", procedure: "Lipoaspiração HD" },
+            { id: 2, name: "Souza, Carlos - 987.654.321-11", status: "Pré-Operatório", procedure: "Rinoplastia" },
+            { id: 3, name: "Costa, Mariana - 555.444.333-22", status: "Negociação", procedure: "Botox" }
         ];
 
         let tasksDB = [
             { id: 101, title: "Comprar Fios", patientId: "", status: "todo" },
-            { id: 102, title: "Revisar Exames Ana", patientId: "1", status: "todo" }
+            { id: 102, title: "Revisar Exames", patientId: "1", status: "todo" }, 
+            { id: 103, title: "Cotação Laser", patientId: null, status: "progress" }
         ];
 
         // 2. INICIALIZAÇÃO
@@ -511,10 +520,8 @@
         });
 
         function populatePatientSelects() {
-            // Encontra todos os dropdowns de paciente no sistema (Chat, Voice, Tarefa)
             const selects = document.querySelectorAll('.patient-select');
             selects.forEach(select => {
-                // Mantém a opção padrão (Geral/Adm) e adiciona os pacientes
                 const defaultOpt = select.firstElementChild; 
                 select.innerHTML = '';
                 if(defaultOpt) select.appendChild(defaultOpt);
@@ -528,7 +535,7 @@
             });
         }
 
-        // 3. TAREFAS (Lógica Corrigida)
+        // 3. TAREFAS
         function openTaskModal() {
             document.getElementById('task-modal').classList.remove('hidden');
             document.getElementById('new-task-title').focus();
@@ -540,7 +547,6 @@
             
             if(!title) return alert("Digite um título!");
 
-            // Cria tarefa na memória
             tasksDB.push({
                 id: Date.now(),
                 title: title,
@@ -550,7 +556,7 @@
 
             renderKanbanBoard();
             document.getElementById('task-modal').classList.add('hidden');
-            document.getElementById('new-task-title').value = ''; // Limpa
+            document.getElementById('new-task-title').value = ''; 
         }
 
         function renderKanbanBoard() {
@@ -559,11 +565,14 @@
             tasksDB.forEach(task => {
                 let colId = task.status === 'todo' ? 'col-todo' : task.status === 'progress' ? 'col-progress' : 'col-done';
                 
-                // Busca nome do paciente se houver vínculo
                 let patientTag = '';
                 if(task.patientId) {
                     const p = patientsDB.find(pat => pat.id == task.patientId);
-                    if(p) patientTag = `<div class="mt-3 pt-2 border-t border-slate-100 flex items-center gap-1 text-[10px] text-blue-600 font-bold uppercase"><i data-lucide="user" class="w-3 h-3"></i> ${p.name}</div>`;
+                    if(p) {
+                        // Extrai apenas o Sobrenome para a tag ficar curta no card
+                        const shortName = p.name.split(',')[0]; 
+                        patientTag = `<div class="mt-3 pt-2 border-t border-slate-100 flex items-center gap-1 text-[10px] text-blue-600 font-bold uppercase"><i data-lucide="user" class="w-3 h-3"></i> ${shortName}</div>`;
+                    }
                 }
 
                 document.getElementById(colId).innerHTML += `
@@ -588,7 +597,6 @@
             const titleEl = document.getElementById('page-title');
             if(titleEl) titleEl.innerText = viewId.replace('-', ' ').toUpperCase();
 
-            // Refresh em componentes específicos
             if(viewId === 'tasks') renderKanbanBoard();
             if(viewId === 'patients') renderPatientsTable();
             if(viewId === 'ai-chat' && window.loadChatHistory) window.loadChatHistory();
@@ -605,10 +613,17 @@
         }
 
         function openPatientProfile(id) {
-            const p = patientsDB.find(pat => pat.id == id); // Use == for loose equality with string IDs
+            const p = patientsDB.find(pat => pat.id == id);
             if(!p) return;
             document.getElementById('p-name').innerText = p.name;
-            document.getElementById('p-avatar').innerText = p.name.split(' ').map(n => n[0]).join('');
+            
+            // Lógica de Avatar Inteligente (Sobrenome + Nome)
+            // Ex: "Silva, Ana" -> S + A = SA
+            let parts = p.name.split(',');
+            let surnameInitial = parts[0].trim().charAt(0);
+            let nameInitial = parts[1] ? parts[1].trim().charAt(0) : ''; 
+            document.getElementById('p-avatar').innerText = surnameInitial + nameInitial;
+            
             document.getElementById('p-status').innerText = p.status;
             
             // Tarefas deste paciente
