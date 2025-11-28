@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VZT Ecossistema | Full Cloud Integrated</title>
+    <title>VZT Ecossistema | Acesso Restrito</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -33,8 +33,8 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .nav-active {
             background-color: #27272a;
@@ -49,9 +49,8 @@
         
         .kanban-col { min-width: 320px; }
         
-        /* Estilos específicos para a tela de Login */
-        body.login-mode { overflow: hidden; background-color: #09090b; }
-        #login-screen { transition: opacity 0.5s ease-out; }
+        /* LAYOUT CLEAN (BRANCO) */
+        body.login-mode { overflow: hidden; background-color: #f8fafc; }
     </style>
 
     <script type="module">
@@ -59,7 +58,7 @@
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // SUA CONFIGURAÇÃO EXATA
+        // CONFIGURAÇÃO
         const firebaseConfig = {
             apiKey: "AIzaSyAfbaZl283P9mcdo8Y1_-TQV4rO6jBr1pA",
             authDomain: "vzt-ecossistema.firebaseapp.com",
@@ -78,16 +77,37 @@
         window.vztAuth = auth;
         window.vztDb = db;
 
-        // --- LOGIN LOGIC ---
+        // ======================================================
+        // 🔒 LISTA VIP (EDITAR AQUI)
+        // ======================================================
+        const ALLOWED_USERS = [
+            "ingrid@leiriaconsulting.com",           // <--- COLOQUE SEU EMAIL AQUI
+            "drvizzotto@vizzotto.com.br"    // Email do Doutor
+        ];
+
+        // --- LOGIN COM VERIFICAÇÃO ---
         window.handleLogin = async () => {
             const btn = document.getElementById('btn-login-google');
+            const errorMsg = document.getElementById('login-error-msg');
+            
             try {
-                btn.innerHTML = 'Conectando...';
-                await signInWithPopup(auth, provider);
+                btn.innerHTML = 'Verificando credenciais...';
+                const result = await signInWithPopup(auth, provider);
+                const userEmail = result.user.email;
+
+                // VERIFICAÇÃO DE SEGURANÇA
+                if (!ALLOWED_USERS.includes(userEmail)) {
+                    await signOut(auth); // Desloga imediatamente
+                    errorMsg.innerText = `Acesso negado para: ${userEmail}. Contate o administrador.`;
+                    errorMsg.classList.remove('hidden');
+                    btn.innerHTML = 'Tentar Outra Conta';
+                } else {
+                    // Sucesso: O onAuthStateChanged cuidará do resto
+                }
+
             } catch (error) {
                 console.error(error);
-                btn.innerHTML = 'Erro. Tente novamente.';
-                setTimeout(() => btn.innerHTML = '<svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Entrar com Google', 2000);
+                btn.innerHTML = 'Erro no Login. Tente novamente.';
             }
         }
 
@@ -95,17 +115,20 @@
             signOut(auth).then(() => window.location.reload());
         }
 
-        // --- CHAT LOGIC (Firebase + Memory) ---
+        // --- DADOS COMPARTILHADOS (CLÍNICA) ---
+        const CLINIC_ID = "MATRIZ_PRINCIPAL"; 
+
         window.loadChatHistory = function() {
             const chatContainer = document.getElementById('chat-messages-area');
             if(!auth.currentUser || !chatContainer) return;
             
-            const q = query(collection(db, "chats", auth.currentUser.uid, "messages"), orderBy("timestamp", "asc"));
+            const q = query(collection(db, "clinics", CLINIC_ID, "chat_logs"), orderBy("timestamp", "asc"));
+            
             onSnapshot(q, (snapshot) => {
                 chatContainer.innerHTML = ''; 
                 snapshot.forEach((doc) => {
                     const msg = doc.data();
-                    appendMessageToUI(msg.text, msg.sender);
+                    appendMessageToUI(msg.text, msg.sender, msg.userName);
                 });
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
@@ -117,52 +140,64 @@
             if(!text || !auth.currentUser) return;
             input.value = ''; 
             
-            await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
-                text: text, sender: 'user', timestamp: new Date()
+            await addDoc(collection(db, "clinics", CLINIC_ID, "chat_logs"), {
+                text: text, 
+                sender: 'user', 
+                userName: auth.currentUser.displayName.split(' ')[0],
+                timestamp: new Date()
             });
             
-            // Simulação de resposta (O backend real virá depois)
             setTimeout(async () => {
-                await addDoc(collection(db, "chats", auth.currentUser.uid, "messages"), {
-                    text: "Processando no Google Drive... (Integração Backend)", sender: 'ai', timestamp: new Date()
+                await addDoc(collection(db, "clinics", CLINIC_ID, "chat_logs"), {
+                    text: "Analisando dados da clínica...", sender: 'ai', timestamp: new Date()
                 });
             }, 1000);
         }
 
-        function appendMessageToUI(text, sender) {
+        function appendMessageToUI(text, sender, userName) {
             const container = document.getElementById('chat-messages-area');
             if(!container) return;
-            let html = sender === 'user' 
-                ? `<div class="flex justify-end mb-4"><div class="bg-slate-900 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md shadow-sm">${text}</div></div>`
-                : `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
+            let html = '';
+            if (sender === 'user') {
+                const isMe = userName === auth.currentUser.displayName.split(' ')[0];
+                html = `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-4">
+                        <span class="text-[10px] text-slate-400 mb-1 px-1">${isMe ? 'Você' : userName}</span>
+                        <div class="${isMe ? 'bg-slate-900 text-white rounded-tr-xl' : 'bg-slate-200 text-slate-700 rounded-tl-xl'} p-3 rounded-lg rounded-b-xl text-sm max-w-md shadow-sm">
+                            ${text}
+                        </div>
+                    </div>`;
+            } else {
+                html = `<div class="flex gap-3 max-w-4xl mb-4"><div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">AI</div><div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm">${text}</div></div>`;
+            }
             container.insertAdjacentHTML('beforeend', html);
         }
 
-        // --- AUTH STATE OBSERVER ---
+        // --- AUTH OBSERVER ---
         onAuthStateChanged(auth, (user) => {
             const loginScreen = document.getElementById('login-screen');
             const appScreen = document.getElementById('app-screen');
             const userAvatar = document.getElementById('user-avatar-area');
 
-            if (user) {
-                // LOGADO
+            // Verifica novamente se o usuário está na lista (para persistência de sessão)
+            if (user && ALLOWED_USERS.includes(user.email)) {
                 loginScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
                 document.body.classList.remove('login-mode');
                 
                 if(userAvatar) {
                     userAvatar.innerHTML = `
-                        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair">
+                        <div class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onclick="handleLogout()" title="Sair de ${user.email}">
                             <div class="text-right hidden sm:block">
                                 <p class="text-xs font-bold text-slate-900">${user.displayName}</p>
-                                <p class="text-[10px] text-emerald-600 font-bold uppercase">Online</p>
+                                <p class="text-[10px] text-emerald-600 font-bold uppercase">Acesso Autorizado</p>
                             </div>
                             <img src="${user.photoURL}" class="w-9 h-9 rounded-lg border border-slate-200 shadow-sm">
                         </div>`;
                 }
                 window.loadChatHistory();
             } else {
-                // DESLOGADO
+                if(user) signOut(auth); // Garante logout se não autorizado
                 loginScreen.classList.remove('hidden');
                 appScreen.classList.add('hidden');
                 document.body.classList.add('login-mode');
@@ -172,18 +207,27 @@
 </head>
 <body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden login-mode">
 
-    <div id="login-screen" class="fixed inset-0 z-50 bg-[#09090b] flex items-center justify-center fade-in">
-        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-2xl w-full max-w-md text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500"></div>
-            <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-3xl font-bold text-black mx-auto mb-6 shadow-lg">V</div>
-            <h1 class="text-2xl font-bold text-white mb-2">VZT Ecossistema</h1>
-            <p class="text-zinc-400 text-sm mb-8">Gestão Clínica Integrada ao Google Workspace.</p>
-            <button id="btn-login-google" onclick="handleLogin()" class="w-full bg-white text-black font-bold py-3.5 px-4 rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2 mb-4">
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center fade-in">
+        
+        <div class="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl border border-slate-100 text-center relative">
+            <div class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-3xl font-bold text-white mx-auto mb-8 shadow-lg shadow-slate-200">V</div>
+            
+            <h1 class="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Bem-vindo, Doutor(a).</h1>
+            <p class="text-slate-500 text-sm mb-8">Acesse o ecossistema VZT com sua conta corporativa.</p>
+            
+            <div id="login-error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg font-bold"></div>
+
+            <button id="btn-login-google" onclick="handleLogin()" class="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3.5 px-4 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3 mb-6 shadow-sm group">
                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                Entrar com Google
+                <span class="group-hover:text-slate-900">Entrar com Google</span>
             </button>
-            <p class="text-[10px] text-zinc-600 uppercase tracking-widest mt-6">Secure Access</p>
+
+            <div class="flex items-center gap-2 justify-center text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ambiente Seguro
+            </div>
         </div>
+        
+        <p class="mt-8 text-xs text-slate-400">© 2024 VZT Ecossistema. Apenas pessoal autorizado.</p>
     </div>
 
     <div id="app-screen" class="hidden flex h-full w-full">
