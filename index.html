@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VZT Ecossistema | Enterprise Workspace</title>
+    <title>VZT Ecossistema | Full Management v7</title>
     
-    <!-- Bibliotecas Externas -->
+    <!-- Bibliotecas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,10 +18,10 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         vzt: {
-                            black: '#09090b',    // Menu Lateral (Zinc 950)
-                            sidebarHover: '#27272a', // Zinc 800
-                            primary: '#2563eb',  // Azul Ação
-                            google: '#4285F4'    // Google Blue
+                            black: '#09090b',    
+                            sidebarHover: '#27272a', 
+                            primary: '#2563eb',  
+                            border: '#e2e8f0'    
                         }
                     }
                 }
@@ -29,67 +29,64 @@
         }
     </script>
     <style>
-        /* Scrollbar Refinada */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Estado Ativo do Menu */
         .nav-active {
             background-color: #27272a;
             color: #ffffff;
             border-left: 3px solid #3b82f6;
         }
 
-        /* Checkbox Customizado */
         .task-checkbox:checked + div {
             text-decoration: line-through;
             color: #94a3b8;
         }
         
-        /* Kanban Scroll */
-        .kanban-scroll {
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-        }
+        .kanban-col { min-width: 320px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-600 font-sans h-screen flex overflow-hidden">
 
-    <!-- === SIDEBAR (POWER BLACK) === -->
-    <aside class="w-72 bg-vzt-black text-slate-400 flex flex-col z-30 flex-shrink-0 shadow-xl">
-        <!-- Logo -->
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="w-72 bg-vzt-black text-slate-400 flex flex-col z-30 flex-shrink-0 shadow-2xl">
         <div class="h-16 flex items-center px-6 border-b border-zinc-800">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-white text-black flex items-center justify-center font-bold text-lg rounded-lg shadow-lg">V</div>
                 <div>
                     <h1 class="text-white font-bold tracking-tight text-lg">VZT</h1>
-                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Ecossistema Integrado</span>
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ECOSSISTEMA INTEGRADO</span>
                 </div>
             </div>
         </div>
 
-        <!-- Menu -->
         <nav class="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
             
             <!-- ESTRATÉGIA -->
-            <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia</div>
+            <div class="px-3 mb-2 mt-1 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Estratégia & Growth</div>
             <button onclick="navTo('control-tower', this)" class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="text-sm font-medium">Control Tower</span>
             </button>
             <button onclick="navTo('crm', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
                 <i data-lucide="filter" class="w-4 h-4"></i><span class="text-sm font-medium">CRM & Funil</span>
             </button>
+            <button onclick="navTo('marketing', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                <i data-lucide="bar-chart-2" class="w-4 h-4 text-orange-400 group-hover:text-white"></i><span class="text-sm font-medium">Marketing & Tráfego</span>
+            </button>
             <button onclick="navTo('finance', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
                 <i data-lucide="dollar-sign" class="w-4 h-4"></i><span class="text-sm font-medium">Financeiro</span>
             </button>
 
             <!-- OPERAÇÃO -->
-            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação Clínica</div>
+            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Operação & Equipe</div>
+            <button onclick="navTo('tasks', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                <i data-lucide="trello" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i><span class="text-sm font-medium">Gestão de Tarefas</span>
+            </button>
             <button onclick="navTo('patients', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
                 <i data-lucide="users" class="w-4 h-4"></i><span class="text-sm font-medium">Pacientes 360º</span>
             </button>
@@ -101,41 +98,46 @@
             </button>
 
             <!-- INTELIGÊNCIA -->
-            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Google AI & Processos</div>
-            <button onclick="navTo('ai', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">VZT IA Voice</span>
+            <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-zinc-600 uppercase tracking-wider">VZT Intelligence</div>
+            <button onclick="navTo('ai-chat', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white group">
+                <i data-lucide="bot" class="w-4 h-4 text-purple-400 group-hover:text-white"></i><span class="text-sm font-medium">VZT AI Chat</span>
+            </button>
+            <button onclick="navTo('ai-voice', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                <i data-lucide="mic" class="w-4 h-4 text-blue-400"></i><span class="text-sm font-medium">AI Voice Recorder</span>
             </button>
             <button onclick="navTo('sops', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                <i data-lucide="file-text" class="w-4 h-4"></i><span class="text-sm font-medium">Processos (Docs)</span>
+                <i data-lucide="file-text" class="w-4 h-4"></i><span class="text-sm font-medium">Processos (SOPs)</span>
             </button>
 
-            <!-- SETTINGS -->
-            <div class="mt-auto pt-6 border-t border-zinc-800 mx-3 pb-4">
+            <!-- SISTEMA -->
+            <div class="mt-auto pt-6 border-t border-zinc-800 mx-3 pb-4 space-y-1">
+                <button onclick="navTo('plugins', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
+                    <i data-lucide="plug" class="w-4 h-4"></i><span class="text-sm font-medium">Plugins Store</span>
+                </button>
                 <button onclick="navTo('settings', this)" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-r-lg transition-all hover:bg-vzt-sidebarHover hover:text-white">
-                    <i data-lucide="settings" class="w-4 h-4"></i><span class="text-sm font-medium">Configurações & Plugins</span>
+                    <i data-lucide="settings" class="w-4 h-4"></i><span class="text-sm font-medium">Configurações</span>
                 </button>
             </div>
         </nav>
     </aside>
 
-    <!-- === MAIN CONTENT === -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-50">
         
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-20 shadow-sm">
             <div class="flex items-center gap-4">
                 <h2 id="page-title" class="text-lg font-bold text-slate-800">Control Tower</h2>
-                <!-- Badge de Integração Google -->
-                <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="w-4 h-4" alt="Google">
-                    <span class="text-xs font-semibold text-slate-600">Workspace Connected</span>
+                <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-200 transition">
+                    <i data-lucide="building-2" class="w-4 h-4 text-slate-500"></i>
+                    <span class="text-xs font-semibold text-slate-600">Clínica Dr. Mateus (Matriz)</span>
+                    <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
                 </div>
             </div>
-
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Sistema Online
+                    Ecossistema Online
                 </div>
                 <div class="flex items-center gap-4">
                     <button class="relative text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i><span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span></button>
@@ -144,14 +146,13 @@
             </div>
         </header>
 
-        <!-- Scrollable Area -->
-        <div id="content-area" class="flex-1 overflow-y-auto p-8 scroll-smooth relative">
+        <!-- Scrollable Content -->
+        <div id="content-area" class="flex-1 overflow-y-auto p-0 scroll-smooth relative">
 
             <!-- ============================================================ -->
-            <!-- VIEW 1: CONTROL TOWER (Action Oriented)                      -->
+            <!-- VIEW: CONTROL TOWER                                          -->
             <!-- ============================================================ -->
-            <div id="view-control-tower" class="view-section space-y-8 fade-in">
-                <!-- Header Action -->
+            <div id="view-control-tower" class="view-section space-y-8 p-8 fade-in">
                 <div class="flex justify-between items-end">
                     <div><h1 class="text-2xl font-bold text-slate-900">Visão Operacional</h1><p class="text-slate-500">Resumo executivo do dia.</p></div>
                     <div class="flex gap-3">
@@ -159,137 +160,109 @@
                         <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 shadow-lg flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Ação</button>
                     </div>
                 </div>
-
-                <!-- KPIs Rápidos -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
                         <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Pacientes Hoje</span><i data-lucide="users" class="w-4 h-4 text-blue-500"></i></div>
                         <h3 class="text-2xl font-bold text-slate-900">12</h3>
-                        <p class="text-xs text-slate-400">8 Confirmados / 4 Pendentes</p>
+                        <p class="text-xs text-slate-400 mt-auto">8 Confirmados / 4 Pendentes</p>
                     </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
                         <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Cirurgias</span><i data-lucide="activity" class="w-4 h-4 text-purple-500"></i></div>
                         <h3 class="text-2xl font-bold text-slate-900">2</h3>
-                        <p class="text-xs text-slate-400">Lipo HD (Manhã)</p>
+                        <p class="text-xs text-slate-400 mt-auto">Lipo HD (Manhã)</p>
                     </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
                         <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">WhatsApp</span><i data-lucide="message-circle" class="w-4 h-4 text-green-500"></i></div>
                         <h3 class="text-2xl font-bold text-slate-900">5</h3>
                         <p class="text-xs text-amber-500 font-bold">Aguardando Resposta</p>
                     </div>
-                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
                         <div class="flex justify-between mb-2"><span class="text-xs font-bold text-slate-500 uppercase">Faturamento Dia</span><i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-500"></i></div>
                         <h3 class="text-2xl font-bold text-slate-900">R$ 24.500</h3>
-                        <p class="text-xs text-emerald-600 font-bold">Meta Batida</p>
+                        <p class="text-xs text-emerald-600 font-bold mt-auto">Meta Batida</p>
                     </div>
                 </div>
-
-                <!-- Action Grid (Agenda + Tasks + Health) -->
+                <!-- Action Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
                     <!-- Agenda -->
                     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i> Agenda (Next)</h3>
-                            <span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Google Sync</span>
-                        </div>
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4 text-blue-600"></i> Agenda (Next)</h3></div>
                         <div class="p-0 overflow-y-auto flex-1 divide-y divide-slate-50">
-                            <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500">
-                                <div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div>
-                                <h4 class="font-bold text-slate-900">Ana Silva</h4>
-                                <p class="text-xs text-slate-500">Retorno Pós-Op • Dr. Mateus</p>
-                            </div>
-                            <div class="p-4 hover:bg-slate-50">
-                                <div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div>
-                                <h4 class="font-bold text-slate-800">Carlos Souza</h4>
-                                <p class="text-xs text-slate-500">Avaliação Facial</p>
-                            </div>
+                            <div class="p-4 bg-blue-50/30 border-l-4 border-blue-500"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-blue-700">14:00 (Agora)</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 uppercase">Em Sala</span></div><h4 class="font-bold text-slate-900">Ana Silva</h4><p class="text-xs text-slate-500">Retorno Pós-Op</p></div>
+                            <div class="p-4 hover:bg-slate-50"><div class="flex justify-between items-start mb-1"><span class="text-sm font-bold text-slate-700">15:00</span><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase">Confirmado</span></div><h4 class="font-bold text-slate-800">Carlos Souza</h4><p class="text-xs text-slate-500">Avaliação</p></div>
                         </div>
                     </div>
-
                     <!-- Tasks -->
                     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4 text-slate-600"></i> Tasks (Hoje)</h3>
-                            <button class="text-xs font-bold text-slate-400 hover:text-slate-600">+ Google Tasks</button>
-                        </div>
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="check-square" class="w-4 h-4 text-slate-600"></i> Tasks (Hoje)</h3><button class="text-xs font-bold text-slate-400 hover:text-slate-600">+ Add</button></div>
                         <div class="p-4 space-y-3 overflow-y-auto flex-1">
-                            <div class="flex items-start gap-3 p-3 bg-white border border-red-100 rounded-lg shadow-sm hover:border-red-300 transition-all group">
-                                <input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer">
-                                <div class="flex-1"><p class="text-sm font-semibold text-slate-800 group-hover:text-red-600">Confirmar cirurgias de amanhã</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Recepção</span><span class="text-[10px] font-bold text-red-500 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Alta</span></div></div>
-                            </div>
-                            <div class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-blue-300 transition-all">
-                                <input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer">
-                                <div class="flex-1"><p class="text-sm font-medium text-slate-700">Emitir NFs manhã</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Financeiro</span></div></div>
-                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-white border border-red-100 rounded-lg shadow-sm group"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-semibold text-slate-800">Confirmar cirurgias</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Recepção</span><span class="text-[10px] text-red-500 font-bold">Alta</span></div></div></div>
+                            <div class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-lg shadow-sm"><input type="checkbox" class="task-checkbox mt-1 w-4 h-4 rounded border-slate-300 text-blue-600"><div class="flex-1"><p class="text-sm font-medium text-slate-700">Emitir NFs</p><div class="flex items-center gap-2 mt-1"><span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">Financeiro</span></div></div></div>
                         </div>
                     </div>
-
-                    <!-- System Health -->
+                    <!-- Health -->
                     <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col overflow-hidden h-full">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4 text-slate-600"></i> Integrações</h3>
-                        </div>
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50"><h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4 text-slate-600"></i> Plugins</h3></div>
                         <div class="p-4 space-y-4 flex-1 overflow-y-auto">
-                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50">
-                                <div class="flex items-center gap-3"><div class="relative"><div class="w-2 h-2 rounded-full bg-green-500"></div><div class="absolute top-0 left-0 w-2 h-2 rounded-full bg-green-500 animate-ping opacity-75"></div></div><div><p class="text-sm font-bold text-slate-700">HubSpot CRM</p><p class="text-[10px] text-slate-400">Sync: Agora</p></div></div><span class="text-xs font-mono text-emerald-600 font-bold">OK</span>
-                            </div>
-                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50">
-                                <div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><div><p class="text-sm font-bold text-slate-700">Google Calendar</p><p class="text-[10px] text-slate-400">Sync: 5m atrás</p></div></div><span class="text-xs font-mono text-emerald-600 font-bold">OK</span>
-                            </div>
-                            <div class="mt-6 pt-6 border-t border-slate-100">
-                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">IA Usage</h4>
-                                <div class="space-y-3">
-                                    <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-600">Transcrição</span><span class="font-bold text-slate-800">12/50</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 24%"></div></div></div>
-                                </div>
-                            </div>
+                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">HubSpot CRM</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
+                            <div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-sm font-bold text-slate-700">Google Calendar</span></div><span class="text-xs font-bold text-emerald-600">OK</span></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- VIEW 2: CRM & FUNIL (Kanban)                                 -->
+            <!-- VIEW: GESTÃO DE TAREFAS (NOVO!)                              -->
             <!-- ============================================================ -->
-            <div id="view-crm" class="view-section hidden h-full flex flex-col fade-in">
+            <div id="view-tasks" class="view-section hidden h-full flex flex-col p-8 fade-in">
                 <div class="flex justify-between items-center mb-6">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Pipeline Comercial</h1><p class="text-slate-500">Sincronizado com HubSpot & RD Station.</p></div>
-                    <div class="flex gap-3">
-                        <input type="text" placeholder="Buscar Lead..." class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Lead</button>
-                    </div>
+                    <div><h1 class="text-2xl font-bold text-slate-900">Gestão da Equipe</h1><p class="text-slate-500">Quadro de tarefas e demandas internas.</p></div>
+                    <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Tarefa</button>
                 </div>
                 
-                <div class="flex-1 overflow-x-auto pb-4 flex gap-4">
-                    <!-- Coluna: Novo Lead -->
-                    <div class="w-80 flex-shrink-0 flex flex-col bg-slate-100 rounded-xl p-2">
-                        <div class="flex justify-between items-center mb-3 px-2 border-t-4 border-blue-500 pt-2 bg-white rounded-t-lg shadow-sm mt-1 pb-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div>
-                        <div class="space-y-2 overflow-y-auto custom-scrollbar flex-1">
+                <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
+                    <!-- A Fazer -->
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">A Fazer (Backlog)</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div>
+                        <div class="space-y-2 overflow-y-auto flex-1">
                             <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                <div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Mariana Costa</span><span class="text-xs text-slate-400">2h</span></div>
-                                <p class="text-xs text-slate-500">Interesse: Rinoplastia</p>
-                                <div class="mt-2 flex gap-2"><span class="bg-green-100 text-green-700 text-[10px] px-1.5 rounded">WhatsApp</span></div>
+                                <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold mb-2 inline-block">Urgente</span>
+                                <p class="text-sm font-bold text-slate-800">Comprar Fios de Sutura</p>
+                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-[10px] font-bold">Enf</div><span class="text-xs text-slate-400">10 Nov</span></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
+                                <p class="text-sm font-bold text-slate-800">Treinar nova secretária</p>
+                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Adm</div><span class="text-xs text-slate-400">15 Nov</span></div>
                             </div>
                         </div>
                     </div>
-                    <!-- Coluna: Agendamento -->
-                    <div class="w-80 flex-shrink-0 flex flex-col bg-slate-100 rounded-xl p-2">
-                        <div class="flex justify-between items-center mb-3 px-2 border-t-4 border-indigo-500 pt-2 bg-white rounded-t-lg shadow-sm mt-1 pb-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div>
-                        <div class="space-y-2 overflow-y-auto custom-scrollbar flex-1">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow-md cursor-pointer">
-                                <div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Carla Dias</span><span class="text-xs text-slate-400">1d</span></div>
-                                <p class="text-xs text-slate-500">Lipo HD - Aguardando Data</p>
-                                <div class="mt-2 flex gap-2"><span class="bg-blue-50 text-blue-700 text-[10px] px-1.5 rounded border border-blue-100">R$ 25k</span></div>
+                    <!-- Em Andamento -->
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Em Andamento</h3><span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">2</span></div>
+                        <div class="space-y-2 overflow-y-auto flex-1">
+                            <div class="bg-white p-3 rounded-lg border border-l-4 border-l-blue-500 border-slate-200 shadow-sm cursor-pointer">
+                                <p class="text-sm font-bold text-slate-800">Cotação Equipamentos Laser</p>
+                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-blue-600 font-bold">Em progresso</span></div>
                             </div>
                         </div>
                     </div>
-                    <!-- Coluna: Negociação -->
-                    <div class="w-80 flex-shrink-0 flex flex-col bg-slate-100 rounded-xl p-2">
-                        <div class="flex justify-between items-center mb-3 px-2 border-t-4 border-amber-500 pt-2 bg-white rounded-t-lg shadow-sm mt-1 pb-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div>
-                        <div class="space-y-2 overflow-y-auto custom-scrollbar flex-1">
-                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-amber-400 cursor-pointer">
-                                <div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Luiza M.</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div>
-                                <p class="text-xs text-slate-500">Full Face - Enviado Orçamento</p>
-                                <div class="mt-2 text-xs text-slate-400">Follow-up necessário</div>
+                    <!-- Revisão -->
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Revisão</h3><span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">1</span></div>
+                        <div class="space-y-2 overflow-y-auto flex-1">
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer">
+                                <p class="text-sm font-bold text-slate-800">Aprovar posts Instagram</p>
+                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">DM</div><span class="text-xs text-amber-600">Aguardando aprovação</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Concluído -->
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full">
+                        <div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Concluído</h3><span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div>
+                        <div class="space-y-2 overflow-y-auto flex-1 opacity-60">
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                <p class="text-sm font-bold text-slate-500 line-through">Pagamento Aluguel</p>
+                                <div class="mt-2 flex items-center justify-between"><div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">Fin</div><span class="text-xs text-emerald-600">Feito</span></div>
                             </div>
                         </div>
                     </div>
@@ -297,351 +270,235 @@
             </div>
 
             <!-- ============================================================ -->
-            <!-- VIEW 3: FINANCEIRO                                           -->
+            <!-- VIEW: MARKETING & TRÁFEGO (NOVO!)                            -->
             <!-- ============================================================ -->
-            <div id="view-finance" class="view-section hidden space-y-6 fade-in">
+            <div id="view-marketing" class="view-section hidden space-y-8 p-8 fade-in">
                 <div class="flex justify-between items-end">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Gestão Financeira</h1><p class="text-slate-500">DRE e Fluxo de Caixa (Integrado: Conta Azul).</p></div>
-                    <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50"><i data-lucide="download" class="w-4 h-4 inline mr-2"></i>Exportar CSV</button>
-                </div>
-
-                <!-- DRE Cards -->
-                <div class="grid grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Receita Bruta</p>
-                        <h3 class="text-2xl font-bold text-slate-900">R$ 185.400</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Despesas Totais</p>
-                        <h3 class="text-2xl font-bold text-red-600">R$ 92.100</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm bg-emerald-50/50 border-emerald-100">
-                        <p class="text-xs font-bold text-emerald-600 uppercase">Lucro Líquido</p>
-                        <h3 class="text-2xl font-bold text-emerald-700">R$ 93.300</h3>
+                    <div><h1 class="text-2xl font-bold text-slate-900">Performance de Marketing</h1><p class="text-slate-500">Análise de Tráfego Pago e Orgânico.</p></div>
+                    <div class="flex items-center gap-3">
+                        <select class="bg-white border border-slate-200 text-sm rounded-lg px-3 py-2"><option>Últimos 30 Dias</option></select>
+                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar Dados</button>
                     </div>
                 </div>
 
-                <!-- Contas -->
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between"><h3 class="font-bold text-slate-800">A Pagar (Essa semana)</h3></div>
-                        <table class="w-full text-sm text-left">
-                            <thead class="text-xs text-slate-500 bg-slate-50 uppercase"><tr><th class="px-4 py-3">Fornecedor</th><th class="px-4 py-3">Venc.</th><th class="px-4 py-3 text-right">Valor</th></tr></thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <tr><td class="px-4 py-3">Allergan (Botox)</td><td class="px-4 py-3 text-slate-500">22/11</td><td class="px-4 py-3 text-right font-bold">R$ 15.000</td></tr>
-                                <tr><td class="px-4 py-3">Aluguel Clínica</td><td class="px-4 py-3 text-slate-500">25/11</td><td class="px-4 py-3 text-right font-bold">R$ 8.500</td></tr>
-                            </tbody>
-                        </table>
+                <!-- KPIs Marketing -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-500 uppercase">Investimento (Ads)</p>
+                        <h3 class="text-2xl font-bold text-slate-900">R$ 4.500</h3>
+                        <p class="text-xs text-slate-400 mt-1">Meta/Google</p>
                     </div>
-                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between"><h3 class="font-bold text-slate-800">A Receber (Cartão/Convênio)</h3></div>
-                        <table class="w-full text-sm text-left">
-                            <thead class="text-xs text-slate-500 bg-slate-50 uppercase"><tr><th class="px-4 py-3">Origem</th><th class="px-4 py-3">Prev.</th><th class="px-4 py-3 text-right">Valor</th></tr></thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <tr><td class="px-4 py-3">Stone (Crédito)</td><td class="px-4 py-3 text-slate-500">23/11</td><td class="px-4 py-3 text-right font-bold text-emerald-600">R$ 12.400</td></tr>
-                                <tr><td class="px-4 py-3">Bradesco Saúde</td><td class="px-4 py-3 text-slate-500">30/11</td><td class="px-4 py-3 text-right font-bold text-emerald-600">R$ 4.200</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-500 uppercase">Leads Gerados</p>
+                        <h3 class="text-2xl font-bold text-slate-900">142</h3>
+                        <p class="text-xs text-emerald-600 mt-1 font-bold">CPL: R$ 31,69</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- VIEW 4: PACIENTES 360                                        -->
-            <!-- ============================================================ -->
-            <div id="view-patients" class="view-section hidden space-y-6 fade-in">
-                <div class="flex justify-between items-center">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Base de Pacientes</h1><p class="text-slate-500">Prontuário Unificado (EHR).</p></div>
-                    <div class="flex items-center gap-3 bg-white border border-slate-200 px-3 py-2 rounded-lg w-80 shadow-sm">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                        <input type="text" placeholder="Buscar por nome, CPF ou telefone..." class="bg-transparent text-sm w-full outline-none">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <p class="text-xs font-bold text-slate-500 uppercase">Vendas (Origem MKT)</p>
+                        <h3 class="text-2xl font-bold text-slate-900">R$ 68.000</h3>
+                        <p class="text-xs text-slate-400 mt-1">12 Pacientes</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase">ROAS (Retorno)</p>
+                        <h3 class="text-2xl font-bold text-emerald-600">15.1x</h3>
+                        <p class="text-xs text-slate-400 mt-1">Excelente</p>
                     </div>
                 </div>
 
-                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200">
-                            <tr><th class="px-6 py-4">Paciente</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Última Visita</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4 text-right">Arquivos (Drive)</th></tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
-                                <td class="px-6 py-4 font-semibold text-slate-900">Ana Silva</td>
-                                <td class="px-6 py-4"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">Ativo</span></td>
-                                <td class="px-6 py-4 text-slate-500">15 Out 2023</td>
-                                <td class="px-6 py-4">Botox Full Face</td>
-                                <td class="px-6 py-4 text-right"><button class="text-blue-600 hover:underline flex items-center justify-end gap-1 ml-auto"><i data-lucide="folder" class="w-4 h-4"></i> Abrir Pasta</button></td>
-                            </tr>
-                            <tr class="hover:bg-slate-50 transition-colors cursor-pointer">
-                                <td class="px-6 py-4 font-semibold text-slate-900">Carlos Souza</td>
-                                <td class="px-6 py-4"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">Pós-Op</span></td>
-                                <td class="px-6 py-4 text-slate-500">20 Nov 2023</td>
-                                <td class="px-6 py-4">Lipoaspiração</td>
-                                <td class="px-6 py-4 text-right"><button class="text-blue-600 hover:underline flex items-center justify-end gap-1 ml-auto"><i data-lucide="folder" class="w-4 h-4"></i> Abrir Pasta</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- VIEW 5: AGENDA MÉDICA                                        -->
-            <!-- ============================================================ -->
-            <div id="view-agenda" class="view-section hidden space-y-6 fade-in">
-                <div class="flex justify-between items-center">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Agenda Médica</h1><p class="text-slate-500">Sincronizada com Google Calendar & Amigo.</p></div>
-                    <div class="flex gap-2">
-                        <button class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium">Hoje</button>
-                        <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync</button>
-                    </div>
-                </div>
-                
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm h-[600px] flex items-center justify-center text-slate-400 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                    <!-- Placeholder Visual da Grade -->
-                    <div class="text-center">
-                        <i data-lucide="calendar" class="w-16 h-16 mx-auto mb-4 text-slate-300"></i>
-                        <p>Grade de Horários (Visualização Semanal)</p>
-                        <p class="text-xs mt-2">Conectado a: <strong>calendar.google.com</strong></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- VIEW 6: WHATSAPP HUB                                         -->
-            <!-- ============================================================ -->
-            <div id="view-whatsapp" class="view-section hidden h-full flex fade-in overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <!-- Sidebar List -->
-                <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50">
-                    <div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div>
-                    <div class="flex-1 overflow-y-auto">
-                        <div class="p-4 border-b border-slate-100 bg-white hover:bg-slate-50 cursor-pointer border-l-4 border-l-blue-500">
-                            <div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Ana P.</span><span class="text-xs text-slate-400">14:30</span></div>
-                            <p class="text-xs text-slate-500 truncate">Doutor, meu rosto está um pouco inchado...</p>
+                <!-- Gráficos e Tabelas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Gráfico de Leads -->
+                    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="bar-chart" class="w-4 h-4 text-orange-500"></i> Evolução de Leads x Custo</h3>
+                        <!-- Simulação Visual CSS -->
+                        <div class="h-64 flex items-end justify-between gap-2 px-2 border-b border-slate-100 pb-2">
+                            <div class="w-full bg-orange-100 rounded-t h-[40%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[60%] rounded-t opacity-80"></div></div>
+                            <div class="w-full bg-orange-100 rounded-t h-[55%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[50%] rounded-t opacity-80"></div></div>
+                            <div class="w-full bg-orange-100 rounded-t h-[70%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[75%] rounded-t opacity-80"></div></div>
+                            <div class="w-full bg-orange-100 rounded-t h-[60%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[65%] rounded-t opacity-80"></div></div>
+                            <div class="w-full bg-orange-100 rounded-t h-[85%] relative group"><div class="absolute bottom-0 w-full bg-orange-500 h-[80%] rounded-t opacity-80"></div></div>
                         </div>
-                        <div class="p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
-                            <div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Novo Lead (Instagram)</span><span class="text-xs text-slate-400">12:10</span></div>
-                            <p class="text-xs text-slate-500 truncate">Olá, gostaria de saber o valor da consulta.</p>
+                        <div class="flex justify-center gap-6 mt-4 text-xs">
+                            <span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> Leads</span>
+                            <span class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-100 rounded-full"></div> Investimento</span>
                         </div>
                     </div>
-                </div>
-                <!-- Chat Area -->
-                <div class="flex-1 flex flex-col bg-white">
-                    <div class="p-4 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="font-bold text-slate-800">Ana P.</h3>
-                        <button class="text-xs text-blue-600 font-bold">Ver Ficha Paciente</button>
-                    </div>
-                    <div class="flex-1 p-6 bg-slate-50 space-y-4 overflow-y-auto">
-                        <div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div>
-                        <div class="flex justify-start"><div class="bg-white border border-slate-200 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div>
-                    </div>
-                    <div class="p-4 border-t border-slate-200 bg-white flex gap-3">
-                        <input type="text" placeholder="Digite sua mensagem..." class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500">
-                        <button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ============================================================ -->
-            <!-- VIEW 7: AI RECORDER (GEMINI)                                 -->
-            <!-- ============================================================ -->
-            <div id="view-ai" class="view-section hidden max-w-4xl mx-auto space-y-8 fade-in">
-                <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-                    <div class="mb-8">
-                        <div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50">
-                            <i data-lucide="mic" class="w-8 h-8"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-slate-900">VZT IA Voice</h2>
-                        <p class="text-slate-500 mt-2">Transcreva consultas e gere insights médicos estruturados.</p>
-                        <div class="flex justify-center items-center gap-2 mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            <i data-lucide="cpu" class="w-3 h-3"></i> Powered by Google Vertex AI
-                        </div>
-                    </div>
-                    <div class="flex justify-center gap-4">
-                        <button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition shadow-xl flex items-center gap-2">
-                            <i data-lucide="play" class="w-5 h-5"></i> Iniciar Gravação
-                        </button>
-                        <button class="px-8 py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition flex items-center gap-2">
-                            <i data-lucide="upload" class="w-5 h-5"></i> Upload Áudio
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- VIEW 8: SOPs (PROCESSOS)                                     -->
-            <!-- ============================================================ -->
-            <div id="view-sops" class="view-section hidden space-y-6 fade-in">
-                <div class="flex justify-between items-center">
-                    <div><h1 class="text-2xl font-bold text-slate-900">Protocolos (SOPs)</h1><p class="text-slate-500">Biblioteca de Conhecimento (Google Docs).</p></div>
-                    <button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Doc</button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Card SOP -->
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-blue-50 rounded text-blue-600"><i data-lucide="file-text" class="w-6 h-6"></i></div>
-                            <span class="text-xs text-slate-400">Atualizado: 2d</span>
-                        </div>
-                        <h3 class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Atendimento WhatsApp</h3>
-                        <p class="text-xs text-slate-500 mt-1">Scripts de vendas e triagem.</p>
-                        <div class="mt-4 flex gap-2">
-                            <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-600">Comercial</span>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                        <div class="p-2 bg-purple-50 rounded text-purple-600 w-fit mb-4"><i data-lucide="video" class="w-6 h-6"></i></div>
-                        <h3 class="font-bold text-slate-900 group-hover:text-purple-600 transition-colors">Checklist Sala Cirúrgica</h3>
-                        <p class="text-xs text-slate-500 mt-1">Vídeo tutorial de montagem.</p>
-                        <div class="mt-4 flex gap-2">
-                            <span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-600">Enfermagem</span>
+                    <!-- Campanhas -->
+                    <div class="bg-white border border-slate-200 rounded-xl flex flex-col shadow-sm">
+                        <div class="p-5 border-b border-slate-100"><h3 class="font-bold text-slate-800">Top Campanhas</h3></div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-gradient-to-tr from-yellow-400 to-purple-600 flex items-center justify-center text-white"><i data-lucide="instagram" class="w-4 h-4"></i></div>
+                                    <div><p class="text-sm font-bold text-slate-800">Lipo HD - Vídeo</p><p class="text-[10px] text-slate-500">Instagram Feed</p></div>
+                                </div>
+                                <div class="text-right"><p class="text-xs font-bold text-slate-800">45 Leads</p><p class="text-[10px] text-emerald-600">R$ 12,50/lead</p></div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-blue-500 flex items-center justify-center text-white"><i data-lucide="search" class="w-4 h-4"></i></div>
+                                    <div><p class="text-sm font-bold text-slate-800">Rinoplastia - Search</p><p class="text-[10px] text-slate-500">Google Ads</p></div>
+                                </div>
+                                <div class="text-right"><p class="text-xs font-bold text-slate-800">28 Leads</p><p class="text-[10px] text-emerald-600">R$ 45,00/lead</p></div>
+                            </div>
+                            <div class="flex items-center justify-between opacity-60">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-blue-700 flex items-center justify-center text-white"><i data-lucide="facebook" class="w-4 h-4"></i></div>
+                                    <div><p class="text-sm font-bold text-slate-800">Botox Promo</p><p class="text-[10px] text-slate-500">Facebook</p></div>
+                                </div>
+                                <div class="text-right"><p class="text-xs font-bold text-slate-800">10 Leads</p><p class="text-[10px] text-red-500">R$ 80,00/lead</p></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- VIEW 9: SETTINGS (PLUGINS & INTEGRATIONS)                    -->
+            <!-- DEMAIS VIEWS (CRM, FINANCEIRO, PACIENTES...)                 -->
             <!-- ============================================================ -->
-            <div id="view-settings" class="view-section hidden space-y-8 fade-in">
-                <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-slate-900">Configurações do Ecossistema</h1>
-                    <p class="text-slate-500">Gerencie os plugins e integrações ativas.</p>
+            
+            <div id="view-crm" class="view-section hidden h-full flex flex-col p-8 fade-in">
+                <div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold text-slate-900">Pipeline Comercial</h1></div><div class="flex gap-3"><input type="text" placeholder="Buscar Lead..." class="bg-white border rounded-lg px-3 py-2 text-sm w-64"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Lead</button></div></div>
+                <div class="flex-1 overflow-x-auto pb-4 flex gap-4 kanban-scroll">
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Novo Lead</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">12</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Mariana Costa</span><span class="text-xs text-slate-400">2h</span></div><p class="text-xs text-slate-500">Rinoplastia</p></div></div></div>
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Agendamento</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">5</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Carla Dias</span><span class="text-xs text-slate-400">1d</span></div><p class="text-xs text-slate-500">Lipo HD</p></div></div></div>
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Negociação</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">8</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-white p-3 rounded-lg border border-l-4 border-l-amber-400 border-slate-200 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-slate-800 text-sm">Luiza M.</span><span class="text-xs text-amber-600 font-bold">Atenção</span></div><p class="text-xs text-slate-500">Orçamento Enviado</p></div></div></div>
+                    <div class="kanban-col flex flex-col bg-slate-100 rounded-xl p-2 h-full"><div class="flex justify-between items-center mb-3 px-2 pt-2"><h3 class="font-bold text-slate-700 text-sm">Fechado / Ganho</h3><span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">42</span></div><div class="space-y-2 overflow-y-auto flex-1"><div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-emerald-900 text-sm">Ana Silva</span><span class="text-xs text-emerald-600">Pago</span></div><p class="text-xs text-emerald-700">Botox Day</p></div></div></div>
                 </div>
+            </div>
 
-                <!-- Categoria: Google Workspace -->
-                <div>
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Produtividade (Google)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Plugin Card -->
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-white border border-slate-100 rounded-lg flex items-center justify-center shadow-sm"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" class="w-6 h-6"></div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Google Calendar</h4>
-                                    <p class="text-xs text-slate-500">Sync de Agenda Médica</p>
-                                </div>
-                            </div>
-                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-emerald-500 cursor-pointer"></label>
-                            </div>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-white border border-slate-100 rounded-lg flex items-center justify-center shadow-sm"><img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo_%282020%29.svg" class="w-6 h-6"></div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Google Drive</h4>
-                                    <p class="text-xs text-slate-500">Armazenamento de Docs</p>
-                                </div>
-                            </div>
-                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-emerald-500 cursor-pointer"></label>
-                            </div>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-white border border-slate-100 rounded-lg flex items-center justify-center shadow-sm"><img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" class="w-6 h-6"></div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Vertex AI (Gemini)</h4>
-                                    <p class="text-xs text-slate-500">Motor de Inteligência</p>
-                                </div>
-                            </div>
-                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                <label class="toggle-label block overflow-hidden h-5 rounded-full bg-emerald-500 cursor-pointer"></label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div id="view-finance" class="view-section hidden space-y-6 p-8 fade-in">
+                <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Gestão Financeira</h1><p class="text-slate-500">DRE e Fluxo de Caixa.</p></div></div>
+                <div class="grid grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Receita Bruta</p><h3 class="text-2xl font-bold text-slate-900">R$ 185.400</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs font-bold text-slate-500 uppercase">Despesas</p><h3 class="text-2xl font-bold text-red-600">R$ 92.100</h3></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm bg-emerald-50/50 border-emerald-100"><p class="text-xs font-bold text-emerald-600 uppercase">Lucro Líquido</p><h3 class="text-2xl font-bold text-emerald-700">R$ 93.300</h3></div></div>
+            </div>
 
-                <!-- Categoria: Negócios -->
-                <div>
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Negócios & CRM</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-[#ff7a59] rounded-lg flex items-center justify-center text-white font-bold">HS</div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">HubSpot</h4>
-                                    <p class="text-xs text-slate-500">CRM Principal</p>
-                                </div>
-                            </div>
-                            <button class="text-xs font-bold text-blue-600 hover:underline">Configurar</button>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm opacity-60">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">CA</div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Conta Azul</h4>
-                                    <p class="text-xs text-slate-500">Financeiro</p>
-                                </div>
-                            </div>
-                            <button class="text-xs font-bold text-slate-400 border border-slate-200 px-2 py-1 rounded">Conectar</button>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl flex items-start justify-between shadow-sm opacity-60">
-                            <div class="flex gap-4">
-                                <div class="w-10 h-10 bg-[#FF4F00] rounded-lg flex items-center justify-center text-white font-bold">Z</div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">Zapier</h4>
-                                    <p class="text-xs text-slate-500">Automação Webhook</p>
-                                </div>
-                            </div>
-                            <button class="text-xs font-bold text-slate-400 border border-slate-200 px-2 py-1 rounded">Conectar</button>
-                        </div>
-                    </div>
+            <div id="view-patients" class="view-section hidden p-8 fade-in h-full flex flex-col relative">
+                <div id="patients-list-container" class="flex-1 flex flex-col space-y-6">
+                    <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Base de Pacientes</h1><p class="text-slate-500">Prontuário Unificado.</p></div><div class="flex items-center gap-3 bg-white border border-slate-200 px-3 py-2 rounded-lg w-80 shadow-sm"><i data-lucide="search" class="w-4 h-4 text-slate-400"></i><input type="text" placeholder="Buscar..." class="bg-transparent text-sm w-full outline-none"></div></div>
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex-1"><table class="w-full text-sm text-left"><thead class="text-xs text-slate-500 bg-slate-50 uppercase font-medium border-b border-slate-200"><tr><th class="px-6 py-4">Paciente</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Procedimento</th><th class="px-6 py-4">Última Interação</th><th class="px-6 py-4 text-right">Ação</th></tr></thead><tbody class="divide-y divide-slate-100" id="patients-table-body"></tbody></table></div>
                 </div>
+                <div id="patient-detail-view" class="hidden absolute inset-0 bg-slate-50 p-8 z-20 overflow-y-auto">
+                    <button onclick="closePatientProfile()" class="mb-6 flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800"><i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar</button>
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6 flex justify-between items-start"><div class="flex gap-6"><div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-3xl font-bold text-slate-400 border-4 border-white shadow-md" id="p-avatar">AS</div><div><h1 class="text-3xl font-bold text-slate-900" id="p-name">Ana Silva</h1><div class="flex gap-2 mt-2"><span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase" id="p-status">Pós-Op</span></div></div></div><div class="text-right"><p class="text-xs font-bold text-slate-400 uppercase tracking-wider">LTV</p><h2 class="text-3xl font-bold text-emerald-600" id="p-ltv">R$ 0</h2></div></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-6 flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-blue-600"></i> Timeline</h3><div class="space-y-6 border-l-2 border-slate-100 pl-6 relative" id="p-timeline"></div></div><div class="space-y-6"><div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm"><h3 class="font-bold text-slate-900 mb-4"><i data-lucide="check-square" class="w-5 h-5 text-slate-600 inline mr-2"></i> Tasks</h3><div class="space-y-3" id="p-tasks"></div></div></div></div>
+                </div>
+            </div>
+
+            <div id="view-agenda" class="view-section hidden space-y-6 p-8 fade-in">
+                <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Agenda Médica</h1></div><div class="flex gap-2"><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Sync</button></div></div>
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm min-h-[600px]"><div class="grid grid-cols-1 divide-y divide-slate-100"><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">09:00</span><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Ana Silva - Retorno</span><span class="text-slate-500 text-xs">Sala 1</span></div></div><div class="py-4 flex gap-6"><span class="text-slate-400 w-12 text-sm font-bold text-right">10:00</span><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 p-3 rounded text-sm"><span class="font-bold text-slate-800 block">Carlos Souza - Lipo HD</span><span class="text-slate-500 text-xs">Centro Cirúrgico</span></div></div></div></div>
+            </div>
+
+            <div id="view-whatsapp" class="view-section hidden h-full flex fade-in bg-white">
+                <div class="w-80 border-r border-slate-200 flex flex-col bg-slate-50"><div class="p-4 border-b border-slate-200"><h3 class="font-bold text-slate-800">Conversas (3)</h3></div><div class="flex-1 overflow-y-auto"><div class="p-4 border-b border-slate-100 bg-white border-l-4 border-l-blue-500 cursor-pointer"><div class="flex justify-between mb-1"><span class="font-bold text-slate-900">Ana P.</span><span class="text-xs text-slate-400">14:30</span></div><p class="text-xs text-slate-500 truncate">Doutor, meu rosto está inchado...</p></div></div></div>
+                <div class="flex-1 flex flex-col bg-white"><div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50"><h3 class="font-bold text-slate-800">Ana P.</h3></div><div class="flex-1 p-6 bg-white space-y-4 overflow-y-auto"><div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-l-xl rounded-tr-xl text-sm max-w-md">Olá Ana, como está se sentindo hoje?</div></div><div class="flex justify-start"><div class="bg-slate-100 text-slate-700 p-3 rounded-r-xl rounded-tl-xl text-sm max-w-md shadow-sm">Doutor, meu rosto está um pouco inchado, é normal?</div></div></div><div class="p-4 border-t border-slate-200 bg-slate-50 flex gap-3"><input type="text" placeholder="Digite..." class="flex-1 border rounded-lg px-4 py-2 text-sm"><button class="p-2 bg-slate-900 text-white rounded-lg"><i data-lucide="send" class="w-5 h-5"></i></button></div></div>
+            </div>
+
+            <div id="view-ai-chat" class="view-section hidden h-full flex bg-white fade-in">
+                <div class="w-72 border-r border-slate-200 bg-slate-50 flex flex-col"><div class="p-4 border-b border-slate-200"><button class="w-full bg-slate-900 text-white rounded-lg py-2.5 text-sm font-medium flex items-center justify-center gap-2 shadow-sm"><i data-lucide="plus" class="w-4 h-4"></i> Novo Chat</button></div><div class="flex-1 overflow-y-auto p-3 space-y-2"><p class="text-xs font-bold text-slate-400 px-2 mt-2 mb-1 uppercase tracking-wider">Histórico</p><button onclick="loadChat('finance')" class="w-full text-left px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:border-purple-300 transition truncate">Análise DRE Novembro</button><button onclick="loadChat('clinical')" class="w-full text-left px-3 py-2 bg-transparent rounded-lg text-sm text-slate-600 hover:bg-slate-200 transition truncate">Script Pós-Op</button></div></div>
+                <div class="flex-1 flex flex-col relative" id="chat-container"><div class="flex-1 flex items-center justify-center text-slate-400 flex-col"><i data-lucide="bot" class="w-16 h-16 mb-4 text-purple-200"></i><p>Selecione um chat ou inicie um novo com o Gemini.</p></div></div>
+            </div>
+
+            <div id="view-ai-voice" class="view-section hidden max-w-4xl mx-auto space-y-8 p-8 fade-in">
+                <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div><div class="mb-8"><div class="w-20 h-20 bg-slate-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-lg shadow-blue-50"><i data-lucide="mic" class="w-8 h-8"></i></div><h2 class="text-2xl font-bold text-slate-900">VZT Gemini Recorder</h2></div><div class="flex justify-center gap-4"><button class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl flex items-center gap-2"><i data-lucide="play" class="w-5 h-5"></i> Iniciar</button></div></div>
+            </div>
+
+            <div id="view-sops" class="view-section hidden space-y-8 p-8 fade-in">
+                <div class="flex justify-between items-center"><div><h1 class="text-2xl font-bold text-slate-900">Protocolos (SOPs)</h1></div><button class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo Doc</button></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Onboarding de Leads</h4><p class="text-xs text-slate-500 mt-1">Scripts de vendas.</p></div><div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm cursor-pointer"><h4 class="font-bold text-slate-900">Checklist Cirúrgico</h4><p class="text-xs text-slate-500 mt-1">Sala e materiais.</p></div></div>
+            </div>
+
+            <div id="view-plugins" class="view-section hidden p-8 space-y-8 fade-in bg-slate-50 h-full overflow-y-auto">
+                <div class="flex justify-between items-end"><div><h1 class="text-2xl font-bold text-slate-900">Plugins Store</h1></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="bg-white p-6 rounded-xl border border-emerald-200 shadow-sm relative overflow-hidden group"><div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">Instalado</div><div class="flex items-start gap-4 mb-4"><div class="w-12 h-12 bg-[#ff7a59] rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-sm">HS</div><div><h3 class="font-bold text-slate-900">HubSpot CRM</h3></div></div><button class="w-full py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">Configurar</button></div></div>
+            </div>
+
+            <div id="view-settings" class="view-section hidden p-8 max-w-5xl mx-auto space-y-8 fade-in">
+                <div><h1 class="text-2xl font-bold text-slate-900">Configurações Globais</h1></div>
+                <div class="border-b border-slate-200 flex gap-6"><button class="pb-3 border-b-2 border-slate-900 font-bold text-slate-900 text-sm">Organização</button><button class="pb-3 border-b-2 border-transparent text-slate-500 text-sm hover:text-slate-700">Usuários</button></div>
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 space-y-4"><h3 class="font-bold text-slate-800">Detalhes da Clínica</h3><div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome</label><input type="text" value="Clínica Dr. Mateus" class="w-full border rounded px-3 py-2 text-sm"></div></div></div>
             </div>
 
         </div>
     </main>
 
+    <!-- === JAVASCRIPT === -->
     <script>
         lucide.createIcons();
 
+        // --- DADOS PACIENTES ---
+        const patientsData = [
+            { id: 1, name: "Ana Silva", status: "Pós-Operatório", procedure: "Lipoaspiração HD", lastContact: "Hoje 14:30", ltv: "R$ 42.500", timeline: [{ title: "Retorno 30 Dias", date: "Hoje", desc: "Avaliação." }], tasks: ["Agendar Drenagem"] },
+            { id: 2, name: "Carlos Souza", status: "Pré-Operatório", procedure: "Rinoplastia", lastContact: "Ontem", ltv: "R$ 18.000", timeline: [{ title: "Exames", date: "Ontem", desc: "Aguardando risco." }], tasks: ["Cobrar Risco"] },
+            { id: 3, name: "Mariana Costa", status: "Negociação", procedure: "Botox", lastContact: "2h atrás", ltv: "R$ 0", timeline: [{ title: "Lead", date: "Hoje", desc: "Instagram Ads." }], tasks: ["Follow-up"] },
+            { id: 4, name: "Roberto Lima", status: "Consulta Agendada", procedure: "Dermato", lastContact: "3d atrás", ltv: "R$ 800", timeline: [{ title: "Agendamento", date: "18 Nov", desc: "Consulta." }], tasks: ["Confirmar"] },
+            { id: 5, name: "Fernanda T.", status: "Pré-Operatório", procedure: "Silicone", lastContact: "5d atrás", ltv: "R$ 22.000", timeline: [{ title: "Pré-Anestésico", date: "Amanhã", desc: "Avaliação." }], tasks: ["Reservar Prótese"] }
+        ];
+
+        // --- NAVEGAÇÃO ---
         function navTo(viewId, btnElement) {
             if(btnElement) {
-                document.querySelectorAll('.nav-btn').forEach(el => {
-                    el.classList.remove('nav-active');
-                    el.classList.add('text-slate-400'); 
-                });
-                btnElement.classList.add('nav-active');
-                btnElement.classList.remove('text-slate-400');
+                document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('nav-active'); el.classList.add('text-slate-400'); });
+                btnElement.classList.add('nav-active'); btnElement.classList.remove('text-slate-400');
             }
-
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById('view-' + viewId);
+            if(target) target.classList.remove('hidden');
+            else document.getElementById('view-control-tower').classList.remove('hidden');
+
+            if(viewId === 'patients') renderPatientsTable();
             
-            if(target) {
-                target.classList.remove('hidden');
-            } else {
-                // Fallback
-                document.getElementById('view-control-tower').classList.remove('hidden');
-            }
-            
-            const titles = {
-                'control-tower': 'Control Tower',
-                'crm': 'Pipeline Comercial',
-                'finance': 'Gestão Financeira',
-                'patients': 'Pacientes 360º',
-                'agenda': 'Agenda Médica',
-                'whatsapp': 'WhatsApp Hub',
-                'ai': 'VZT IA ',
-                'sops': 'Processos & SOPs',
-                'settings': 'Configurações'
-            };
+            const titles = { 'control-tower': 'Control Tower', 'marketing': 'Marketing & Tráfego', 'tasks': 'Gestão de Tarefas', 'patients': 'Pacientes 360º', 'ai-chat': 'VZT AI Chat', 'sops': 'Protocolos', 'settings': 'Configurações' };
             document.getElementById('page-title').innerText = titles[viewId] || 'VZT Ecossistema';
         }
-    </script>
-    <style>
-        /* CSS Toggle Switch Fake */
-        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        .toggle-checkbox { right: 0; z-index: 1; border-color: #e2e8f0; transition: all 0.3s; }
-        .toggle-label { width: 2.5rem; height: 1.25rem; background-color: #cbd5e1; }
-    </style>
-</body>
 
+        // --- LÓGICA PACIENTES ---
+        function renderPatientsTable() {
+            const tbody = document.getElementById('patients-table-body');
+            tbody.innerHTML = '';
+            patientsData.forEach(p => {
+                const statusColor = p.status.includes('Pré') ? 'bg-purple-100 text-purple-700' : p.status.includes('Pós') ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700';
+                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="px-6 py-4 font-semibold text-slate-900">${p.name}</td><td class="px-6 py-4"><span class="${statusColor} px-2 py-1 rounded-full text-xs font-bold">${p.status}</span></td><td class="px-6 py-4 text-slate-600">${p.procedure}</td><td class="px-6 py-4 text-slate-500 text-xs">${p.lastContact}</td><td class="px-6 py-4 text-right"><button onclick="openPatientProfile(${p.id})" class="bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 ml-auto"><i data-lucide="folder-open" class="w-3 h-3"></i> Abrir Pasta</button></td></tr>`;
+            });
+            lucide.createIcons();
+        }
+
+        function openPatientProfile(id) {
+            const p = patientsData.find(pat => pat.id === id);
+            if(!p) return;
+            document.getElementById('p-name').innerText = p.name;
+            document.getElementById('p-avatar').innerText = p.name.split(' ').map(n => n[0]).join('');
+            document.getElementById('p-status').innerText = p.status;
+            document.getElementById('p-ltv').innerText = p.ltv;
+            
+            const timelineDiv = document.getElementById('p-timeline'); timelineDiv.innerHTML = '';
+            p.timeline.forEach(t => timelineDiv.innerHTML += `<div class="relative"><div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-2 border-white bg-slate-300"></div><h4 class="text-sm font-bold text-slate-900">${t.title}</h4><span class="text-xs text-slate-400 block mb-1">${t.date}</span><p class="text-sm text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${t.desc}</p></div>`);
+            
+            const tasksDiv = document.getElementById('p-tasks'); tasksDiv.innerHTML = '';
+            p.tasks.forEach(task => tasksDiv.innerHTML += `<div class="flex items-center gap-2"><input type="checkbox" class="task-checkbox rounded text-blue-600"><div class="text-sm text-slate-700">${task}</div></div>`);
+
+            document.getElementById('patients-list-container').classList.add('hidden');
+            document.getElementById('patient-detail-view').classList.remove('hidden');
+        }
+
+        function closePatientProfile() {
+            document.getElementById('patient-detail-view').classList.add('hidden');
+            document.getElementById('patients-list-container').classList.remove('hidden');
+        }
+
+        // --- CHAT LOGIC ---
+        function loadChat(type) {
+            const container = document.getElementById('chat-container');
+            let content = '';
+            if(type === 'finance') {
+                content = `<div class="h-16 border-b border-slate-200 flex items-center px-6 bg-white"><span class="font-bold text-purple-600">Chat: Análise Financeira</span></div><div class="flex-1 overflow-y-auto p-8 space-y-6 bg-white"><div class="flex gap-4 max-w-4xl mx-auto flex-row-reverse"><div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none text-sm shadow-md">Lucro de Nov?</div></div><div class="flex gap-4 max-w-4xl mx-auto"><div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-sm flex-shrink-0"><i data-lucide="bot" class="w-6 h-6"></i></div><div class="bg-slate-50 border p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm"><p><strong>R$ 93.300</strong> (Margem 50%).</p></div></div></div><div class="p-6 bg-white border-t"><input class="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm" placeholder="Continuar conversa..."></div>`;
+            } else {
+                content = `<div class="h-16 border-b border-slate-200 flex items-center px-6 bg-white"><span class="font-bold text-blue-600">Chat: Clínico</span></div><div class="flex-1 overflow-y-auto p-8 space-y-6 bg-white"><div class="flex gap-4 max-w-4xl mx-auto flex-row-reverse"><div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none text-sm shadow-md">Script Pós-Op</div></div><div class="flex gap-4 max-w-4xl mx-auto"><div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white shadow-sm flex-shrink-0"><i data-lucide="bot" class="w-6 h-6"></i></div><div class="bg-slate-50 border p-4 rounded-2xl rounded-tl-none text-slate-700 text-sm shadow-sm"><p>"Olá! Hoje é seu 3º dia. Beba água e use a cinta."</p></div></div></div><div class="p-6 bg-white border-t"><input class="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm" placeholder="Continuar conversa..."></div>`;
+            }
+            container.innerHTML = content;
+            lucide.createIcons();
+        }
+    </script>
+</body>
 </html>
